@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TastyBite Restaurant</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="logo"><img src="/pictures-restaurant/restaurant-logo.png" alt="TastyBite Logo">TastyBite</div>
+        <nav class="nav">
+            <a href="#home">Home</a>
+            <a href="#about">About</a>
+            <a href="#menu">Menu</a>
+            <a href="#reservations">Reservations</a>
+            <a href="#contact">Contact</a>
+        </nav>
+        <button id="navToggle" class="nav-toggle">&#9776;</button>
+    </header>
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1><bold>Welcome to TastyBite</bold></h1>
+            <p>Your favorite place for delicious meals and great ambiance.</p>
+            <p>Fresh, local ingredients. Cozy atmosphere. Unforgettable taste.</p>
+            <p>Experience the best dining with us.</p>
+            <a href="#reservations" class="btn">Book a Table</a>
+        </div>
+    </section>
+    <section id="about" class="section">
+    <h2 class="section-title"><span class="symbol">&HorizontalLine;</span> About Us <span class="symbol">&HorizontalLine;</span></h2>
+ <div class="about-section">
+  <div class="about-image">
+    <img src="/pictures-restaurant/chicken-dum-biryani.jpg" alt="Recipe">
+  </div>
+
+  <div class="about-content">
+    <p class="about-info1">
+      At TastyBite, we believe in simple, honest food made with love. Our chefs
+      use fresh, seasonal ingredients to create dishes inspired by classic
+      Italian cuisine with a modern twist.
+    </p>
+    <br>
+    <p class="about-info2">
+      Whether you're looking for a romantic dinner, a family celebration, or a
+      casual meal with friends, our warm and welcoming atmosphere is perfect
+      for every occasion.
+    </p>
+  </div>
+</div>
+    </section>
+<section id="menu" class="section">
+  <h2 class="section-title"><span class="symbol">&HorizontalLine;</span> Our Menu <span class="symbol">&HorizontalLine;</span></h2>
+
+  <div class="menu-filters">
+    <button class="filter-btn active" data-category="all">All</button>
+    <button class="filter-btn" data-category="starters">Starters</button>
+    <button class="filter-btn" data-category="biryanis">Biryanis</button>
+    <button class="filter-btn" data-category="fried-rice-noodles">Fried Rice &amp; Noodles</button>
+    <button class="filter-btn" data-category="main-course">Main Course</button>
+    <button class="filter-btn" data-category="indian-breads">Indian Breads</button>
+    <button class="filter-btn" data-category="beverages">Beverages</button>
+    <button class="filter-btn" data-category="desserts">Desserts</button>
+  </div>
+
+  <div class="menu-grid">
+
+    <article class="menu-item" data-category="starters">
+      <img src="/pictures-restaurant/Paneer-Tikka.png" alt="Panner Tikka">
+      <h3>Paneer Tikka</h3>
+      <p>Marinated cottage cheese cubes grilled in tandoor.</p>
+      <span class="price">₹249</span>
+      <span class="tag" id="veg">Veg</span>
+    </article>
+
+    <article class="menu-item" data-category="starters">
+      <img src="/pictures-restaurant/vegetable-spring-rolls.png" alt="Vegetable Spring Rolls">
+      <h3>Veg Spring Rolls</h3>
+      <p>Crispy rolls stuffed with spiced vegetables.</p>
+      <span class="price">₹199</span>
+      <span class="tag"id="veg">Veg</span>
+    </article>
+
+    <article class="menu-item" data-category="starters">
+      <img src="/pictures-restaurant/crispy-corn.png" alt="Crispy Corn">
+      <h3>Crispy Corn </h3>
+      <p>Golden fried corn tossed with herbs &amp; spices.</p>
+      <span class="price">₹189</span>
+      <span class="tag" id="veg">Veg</span>
+    </article>
+
+    <article class="menu-item" data-category="starters">
+      <img src="/pictures-restaurant/gobi-manchurian.png" alt="Gobi Manchurian">
+      <h3>Gobi Manchurian </h3>
+      <p>Crispy cauliflower florets in Indo-Chinese sauce.</p>
+      <span class="price">₹199</span>
+      <span class="tag" id="veg">Veg</span>
+    </article>
+
+    <article class="menu-item" data-category="starters">
+      <img src="/pictures-restaurant/paneer-65.png" alt="Paneer 65">
+      <h3>Paneer 65 </h3>
+      <p>South-Indian style spicy paneer starter.</p>
+      <span class="price">₹229</span>
+      <span class="tag" id="veg">Veg</span>
+    </article>
+    <article class="menu-item" data-category="starters">
+      <img src="/pictures-restaurant/chicken-65.png" alt="Chicken 65"><h3>Chicken 65 </h3>
+      <p>Spicy deep-fried chicken with curry leaves.</p>
+      <span class="price">₹249</span>
+      <span class="tag" id="Non-Veg">Non-Veg</span>
+    </article>
+
+    <article class="menu-item" data-category="starters">
+      <img src="/pictures-restaurant/tandoori-chicken.png" alt="Tandoori Chicken"><h3>Tandoori Chicken </h3>
+      <p>Classic tandoor roasted chicken with spices.</p>
+      <span class="price">₹329</span>
+      <span class="tag" id="Non-Veg">Non-Veg</span>
+    </article>
+
+    <article class="menu-item" data-category="biryanis">
+      <img src="/pictures-restaurant/chicken-dum-biryani.jpg" alt="Chicken Dum Biryani">
+      <h3>Chicken Dum Biryani </h3>
+      <p>Hyderabadi style slow cooked biryani.</p>
+      <span class="price">₹299</span>
+      <span class="tag" id="Non-Veg">Non-Veg</span>
+    </article>
+
+    <article class="menu-item" data-category="biryanis">
+      <img src="/pictures-restaurant/MuttonBiryani.jpg" alt="Mutton Biryani">
+      <h3>Mutton Biryani </h3>
+      <p>Tender mutton cooked with aromatic rice.</p>
+      <span class="price">₹349</span>
+      <span class="tag" id="Non-Veg">Non-Veg</span>
+    </article>
+
+    <article class="menu-item" data-category="biryanis">
+      <img src="/pictures-restaurant/veg-biryani.jpg" alt="Veg Biryani"><h3>Veg Biryani </h3> 
+      <p>Spiced basmati rice with vegetables.</p>
+      <span class="price">₹239</span>
+      <span class="tag" id="veg">Veg</span>
+    </article>
+
+    <article class="menu-item" data-category="fried-rice-noodles">
+      <img src="/pictures-restaurant/veg-fried-rice.jpg" alt="Veg Fried Rice"><h3>Veg Fried Rice </h3>
+      <p>Stir-fried rice with vegetables.</p>
+      <span class="price">₹199</span>
+      <span class="tag" id="veg">Veg</span>
+    </article>
+    <article class="menu-item" data-category="fried-rice-noodles">
+     <img src="/pictures-restaurant/chicken-fried-rice.jpeg" alt="Chicken Fried Rice"> <h3>Chicken Fried Rice </h3>
+      <p>Fried rice tossed with chicken.</p>
+      <span class="price">₹249</span>
+      <span class="tag" id="Non-Veg">Non-Veg</span>
+    </article>
+
+    <article class="menu-item" data-category="main-course">
+      <img src="/pictures-restaurant/paneer-butter-masala.jpg" alt="Paneer Butter Masala">  <h3>Paneer Butter Masala </h3>
+      <p>Rich creamy tomato gravy with paneer.</p>
+      <span class="price">₹269</span>
+      <span class="tag" id="veg">Veg</span>
+    </article>
+    <article class="menu-item" data-category="main-course">
+      <img src="/pictures-restaurant/butter-chicken.jpg" alt="Butter Chicken"><span class="tag" id="Non-Veg">Non-Veg</span>
+      <h3>Butter Chicken </h3>
+      <p>Smoky chicken in buttery tomato gravy.</p>
+      <span class="price">₹329</span>
+    </article>
+
+    <article class="menu-item" data-category="indian-breads">
+      <img src="/pictures-restaurant/Butter-Naan-3.jpg" alt="Butter Naan"> <h3>Butter Naan</h3>
+      <p>Soft tandoor baked naan.</p>
+      <span class="price">₹49</span>
+    </article>
+
+    <article class="menu-item" data-category="indian-breads">
+      <img src="/pictures-restaurant/Homemade-Garlic-Naan-72-dpi.jpg" alt="Garlic Naan"><h3>Garlic Naan</h3>
+      <p>Naan topped with garlic &amp; coriander.</p>
+      <span class="price">₹69</span>
+    </article>
+
+    <article class="menu-item" data-category="beverages">
+      <img src="/pictures-restaurant/Punjabi-Sweet-Lassi-Drink-Recipe.jpg" alt="Sweet Lassi"><h3>Sweet Lassi</h3>
+      <p>Traditional yogurt based drink.</p>
+      <span class="price">₹99</span>
+    </article>
+
+    <article class="menu-item" data-category="beverages">
+      <img src="/pictures-restaurant/Chai_Masala_Tea.webp" alt="Masala Tea"><h3>Masala Tea</h3>
+      <p>Indian spiced milk tea.</p>
+      <span class="price">₹49</span>
+    </article>
+
+    <article class="menu-item" data-category="desserts">
+      <img src="/pictures-restaurant/gulab-jamun.jpeg" alt="Gulab Jamun"><h3>Gulab Jamun</h3>
+      <p>Soft milk dumplings in sugar syrup.</p>
+      <span class="price">₹99</span>
+    </article>
+
+    <article class="menu-item" data-category="desserts">
+      <img src="/pictures-restaurant/chocolate-lava-cake.jpeg" alt="Chocolate Lava Cake"><h3>Chocolate Lava Cake</h3>
+      <p>Warm cake with molten chocolate center.</p>
+      <span class="price">₹149</span>
+    </article>
+
+  </div>
+</section>
+
+    <section id="reservations" class="section section-alt">
+    <h2 class="section-title"><span class="symbol">&HorizontalLine;</span> Reservations <span class="symbol">&HorizontalLine;</span></h2>
+    <p class="reservation-description">Book your table and enjoy an unforgettable dining experience.</p>
+    <form id="reservationForm" class="form">
+      <div class="form-group">
+        <label for="name">Full Name *</label>
+        <input type="text" id="name" required />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email *</label>
+        <input type="email" id="email" required />
+      </div>
+
+      <div class="form-group">
+        <label for="date">Date *</label>
+        <input type="date" id="date" required />
+      </div>
+
+      <div class="form-group">
+        <label for="time">Time *</label>
+        <input type="time" id="time" required />
+      </div>
+
+      <div class="form-group">
+        <label for="guests">Number of Guests *</label>
+        <input type="number" id="guests" min="1" max="20" value="2" required />
+      </div>
+
+      <div class="form-group">
+        <label for="message">Special Requests</label>
+        <textarea id="message" rows="3"></textarea>
+      </div>
+
+      <button type="submit" class="btn">Submit Reservation</button>
+      <p id="formMessage" class="form-message"></p>
+    </form>
+  </section>
+
+ 
+  <section id="contact" class="section section-alt">
+    <h2 class="section-title"><span class="sym">&HorizontalLine;</span> Contact us <span class="sym">&HorizontalLine;</span></h2>
+    <p class="contact-content">We'd love to hear from you. Reach out anytime!</p>
+  <div class="contact-grid">
+    <div class="contact-div">
+    </br>
+    <div class="contact-symbols"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+      xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7s"
+          stroke="white" stroke-width="2" fill="none"/>
+    <circle cx="12" cy="9" r="2.5" stroke="white" stroke-width="2"/>
+  </svg>
+  </div>
+          <h3 id="contact-head">Visit Us</h3>
+          <p>Ambeerupeta village, Srikakulam dist, Andhra Pradesh 532429</p>
+  </div>
+    <div class="contact-div">
+      <div class="contact-symbols"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+        xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9"
+            stroke="white" stroke-width="2"/>
+          <path d="M12 7v5l3 2"
+          stroke="white" stroke-width="2"
+          stroke-linecap="round"/>
+      </svg>
+      </div>
+          <h3 id="contact-head">Opening Hours</h3>
+          <p>Mon-Fri: 09:00 - 22:00<br />Sat-Sun: 06:00 - 24:00</p>
+    
+    </div>
+        <div class="contact-div">
+          <div class="contact-symbols"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+      xmlns="http://www.w3.org/2000/svg">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2
+            A19.86 19.86 0 0 1 3 5.18
+            2 2 0 0 1 5 3h3
+            a2 2 0 0 1 2 1.72
+            c.12.9.32 1.76.6 2.58
+            a2 2 0 0 1-.45 2.11L9 10.91
+            a16 16 0 0 0 6 6l1.5-1.5
+            a2 2 0 0 1 2.11-.45
+            c.82.28 1.68.48 2.58.6
+            a2 2 0 0 1 1.81 1.76z"
+          stroke="white" stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+  </svg>
+  </div>
+          <h3 id="contact-head">Get in Touch</h3>
+</br>
+          <a class="link-style"href="tel:+918885636899"aria-label="Call +91 88856 36899">&#9742; Click to Call</a>
+          <a class="link-style" href="mailto:dilleswararaomalla410@gmail.com" aria-label="Mail dilleswararaomalla410@gmail.com">✉ Email us</a>
+      </div>
+  </section>
+  <footer class="footer">
+    <img src="/pictures-restaurant/restaurant-logo.png" alt="TastyBite Logo" class="footer-logo">
+    <span class="footer-logo1">TastyBite</span>
+    <p class="footer-content1">&copy; 2025 TastyBite Restaurant. All rights reserved.</p>
+    <p class="footer-content2">Made with love for food enthusiasts</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+</body>
+</html>
