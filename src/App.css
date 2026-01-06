@@ -23,6 +23,7 @@ body {
   justify-content: space-between;
   padding: 0.75rem 1.5rem;
   background-color: #ffffffdd;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid #eee;
     background-color: rgb(253, 225, 204);
