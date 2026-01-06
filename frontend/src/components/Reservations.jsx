@@ -1,29 +1,44 @@
 import { useState } from 'react';
+import { reservationAPI } from '../services/api';
 
 function Reservations() {
   const [formMessage, setFormMessage] = useState('');
   const [messageColor, setMessageColor] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setFormMessage('');
 
     const formData = new FormData(e.target);
-    const name = formData.get('name').trim();
-    const email = formData.get('email').trim();
-    const date = formData.get('date');
-    const time = formData.get('time');
-    const guests = formData.get('guests');
+    const reservationData = {
+      name: formData.get('name').trim(),
+      email: formData.get('email').trim(),
+      date: formData.get('date'),
+      time: formData.get('time'),
+      guests: parseInt(formData.get('guests')),
+      message: formData.get('message')?.trim() || '',
+    };
 
-    if (!name || !email || !date || !time || !guests) {
+    if (!reservationData.name || !reservationData.email || !reservationData.date || !reservationData.time || !reservationData.guests) {
       setFormMessage('Please fill in all required fields.');
       setMessageColor('red');
+      setIsSubmitting(false);
       return;
     }
 
-    setFormMessage(`Thanks, ${name}! Your reservation for ${guests} guest(s) on ${date} at ${time} has been received.`);
-    setMessageColor('green');
-
-    e.target.reset();
+    try {
+      const response = await reservationAPI.create(reservationData);
+      setFormMessage(`Thanks, ${reservationData.name}! Your reservation for ${reservationData.guests} guest(s) on ${reservationData.date} at ${reservationData.time} has been confirmed.`);
+      setMessageColor('green');
+      e.target.reset();
+    } catch (error) {
+      setFormMessage(error.message || 'Failed to submit reservation. Please try again.');
+      setMessageColor('red');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -65,8 +80,8 @@ function Reservations() {
           <textarea id="message" name="message" rows="3"></textarea>
         </div>
 
-        <button type="submit" className="btn">
-          Submit Reservation
+        <button type="submit" className="btn" disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting...' : 'Submit Reservation'}
         </button>
         {formMessage && (
           <p id="formMessage" className="form-message" style={{ color: messageColor }}>
