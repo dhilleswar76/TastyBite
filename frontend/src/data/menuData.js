@@ -16,6 +16,18 @@ export const menuItems = [
     rating: 4.9,
     prepTimeMinutes: 20,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Mild", "Medium", "Hot", "Extra Hot"],
+      addOns: [
+        { id: "mint-chutney", name: "Extra Mint Chutney Dip", price: 20, icon: "🌿" },
+        { id: "cheese-grate", name: "Grated Amul Cheese", price: 40, icon: "🧀" },
+        { id: "lemon-wedges", name: "Spiced Masala Lemon Wedges", price: 15, icon: "🍋" },
+        { id: "pickled-onions", name: "Sirka Pickled Shallots", price: 25, icon: "🧅" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 2,
@@ -34,6 +46,17 @@ export const menuItems = [
     rating: 4.7,
     prepTimeMinutes: 15,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Mild Crisp", "Medium Spicy", "Extra Crispy & Hot"],
+      addOns: [
+        { id: "sweet-chili", name: "Extra Sweet Chili Sauce", price: 20, icon: "🌶️" },
+        { id: "mayo-dip", name: "Garlic Mayo Dip", price: 25, icon: "🧄" },
+        { id: "schezwan", name: "Fiery Schezwan Sauce", price: 30, icon: "🔥" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 3,
@@ -52,6 +75,16 @@ export const menuItems = [
     rating: 4.8,
     prepTimeMinutes: 15,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Mild Tangy", "Classic Medium", "Peri-Peri Extra Hot"],
+      addOns: [
+        { id: "cheese-dust", name: "Cheese Seasoning Dust", price: 30, icon: "🧀" },
+        { id: "lemon-butter", name: "Warm Lemon Butter Glaze", price: 25, icon: "🧈" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 4,
@@ -70,6 +103,16 @@ export const menuItems = [
     rating: 4.7,
     prepTimeMinutes: 18,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Mild Glaze", "Medium Tangy", "Hot Chili Style"],
+      addOns: [
+        { id: "extra-gravy-m", name: "Extra Manchurian Gravy", price: 35, icon: "🍲" },
+        { id: "fried-garlic", name: "Crunchy Fried Garlic Chips", price: 20, icon: "🧄" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 5,
@@ -88,6 +131,16 @@ export const menuItems = [
     rating: 4.8,
     prepTimeMinutes: 18,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Medium", "Hot", "Fiery Andhra Style"],
+      addOns: [
+        { id: "curry-tadka", name: "Extra Fried Curry Leaves Tadka", price: 15, icon: "🍃" },
+        { id: "curd-dip", name: "Cooling Spiced Yogurt Dip", price: 25, icon: "🥣" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 6,
@@ -106,6 +159,17 @@ export const menuItems = [
     rating: 4.9,
     prepTimeMinutes: 20,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Medium", "Hot", "Gunpowder Spicy"],
+      addOns: [
+        { id: "boneless-extra", name: "Extra Boneless Chicken Chunks", price: 60, icon: "🍗" },
+        { id: "curry-tadka", name: "Extra Fried Curry Leaves Tadka", price: 15, icon: "🍃" },
+        { id: "lemon-onions", name: "Lemon Onion Salad Ring", price: 20, icon: "🧅" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 7,
@@ -124,6 +188,17 @@ export const menuItems = [
     rating: 5.0,
     prepTimeMinutes: 25,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Mild Roasted", "Medium Classic", "Extra Smoky & Spiced"],
+      addOns: [
+        { id: "tandoor-butter", name: "Brushed Garlic Butter", price: 30, icon: "🧈" },
+        { id: "mint-sauce", name: "Royal Green Mint Chutney", price: 20, icon: "🌿" },
+        { id: "chaat-masala", name: "Extra Sprinkled Chaat Masala", price: 10, icon: "✨" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 8,
@@ -142,6 +217,18 @@ export const menuItems = [
     rating: 5.0,
     prepTimeMinutes: 25,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Mild Flavorful", "Medium Spiced", "Hot Hyderabadi", "Extra Spicy Zaffrani"],
+      addOns: [
+        { id: "boiled-egg", name: "Boiled Spiced Egg", price: 25, icon: "🥚" },
+        { id: "salan-gravy", name: "Extra Mirchi Ka Salan Gravy", price: 40, icon: "🍲" },
+        { id: "raita-pot", name: "Thick Spiced Onion Raita", price: 30, icon: "🥣" },
+        { id: "extra-chicken-piece", name: "Extra Juicy Chicken Piece", price: 80, icon: "🍗" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 9,
@@ -160,6 +247,18 @@ export const menuItems = [
     rating: 4.9,
     prepTimeMinutes: 30,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Medium", "Hot", "Royal Lucknowi Dum", "Fiery Hyderabadi"],
+      addOns: [
+        { id: "extra-mutton-cut", name: "Extra Tender Mutton Chunk", price: 110, icon: "🥩" },
+        { id: "boiled-egg", name: "Boiled Spiced Egg", price: 25, icon: "🥚" },
+        { id: "salan-gravy", name: "Extra Mirchi Ka Salan Gravy", price: 40, icon: "🍲" },
+        { id: "fried-onions", name: "Caramelized Birista Onions", price: 25, icon: "🧅" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 10,
@@ -178,6 +277,17 @@ export const menuItems = [
     rating: 4.7,
     prepTimeMinutes: 20,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Mild", "Medium", "Spicy Dum"],
+      addOns: [
+        { id: "paneer-cubes", name: "Extra Roasted Paneer Cubes", price: 50, icon: "🧀" },
+        { id: "salan-gravy", name: "Mirchi Ka Salan Gravy", price: 40, icon: "🍲" },
+        { id: "raita-pot", name: "Cucumber Mint Raita", price: 30, icon: "🥣" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 11,
@@ -196,6 +306,17 @@ export const menuItems = [
     rating: 4.6,
     prepTimeMinutes: 15,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Mild Non-Spicy", "Medium Szechuan", "Fiery Red Chili"],
+      addOns: [
+        { id: "mushrooms", name: "Stir-Fried Button Mushrooms", price: 45, icon: "🍄" },
+        { id: "schezwan-sauce", name: "House Schezwan Sauce", price: 25, icon: "🌶️" },
+        { id: "paneer-toss", name: "Tossed Paneer Bits", price: 40, icon: "🧀" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 12,
@@ -214,6 +335,17 @@ export const menuItems = [
     rating: 4.8,
     prepTimeMinutes: 18,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Mild", "Medium Classic", "Extra Spicy Dragon Style"],
+      addOns: [
+        { id: "fried-egg", name: "Sunny Side Fried Egg on Top", price: 30, icon: "🍳" },
+        { id: "extra-chicken-wok", name: "Extra Shredded Chicken", price: 55, icon: "🍗" },
+        { id: "schezwan-sauce", name: "Fiery Schezwan Sauce", price: 25, icon: "🌶️" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 13,
@@ -232,6 +364,17 @@ export const menuItems = [
     rating: 4.9,
     prepTimeMinutes: 20,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Mild Sweet-Rich", "Medium Spiced", "Extra Spicy Masala"],
+      addOns: [
+        { id: "butter-dollop", name: "Extra Dollop of Amul Butter", price: 20, icon: "🧈" },
+        { id: "extra-cream", name: "Fresh Malai Cream Swirl", price: 25, icon: "🥛" },
+        { id: "extra-paneer", name: "Extra Paneer Cubes (4 pcs)", price: 50, icon: "🧀" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 14,
@@ -250,6 +393,18 @@ export const menuItems = [
     rating: 5.0,
     prepTimeMinutes: 25,
     available: true,
+    customizable: true,
+    customization: {
+      type: "spicy",
+      options: ["Mild Creamy", "Medium Royal", "Spicy Delhi Style"],
+      addOns: [
+        { id: "extra-boneless-bc", name: "Extra Tandoori Chicken Tikka", price: 75, icon: "🍗" },
+        { id: "butter-dollop", name: "Extra Dollop of Amul Butter", price: 20, icon: "🧈" },
+        { id: "extra-cream", name: "Fresh Cream Swirl", price: 25, icon: "🥛" },
+        { id: "garlic-tadka", name: "Burnt Garlic Tadka", price: 30, icon: "🧄" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 15,
@@ -268,6 +423,17 @@ export const menuItems = [
     rating: 4.8,
     prepTimeMinutes: 8,
     available: true,
+    customizable: true,
+    customization: {
+      type: "none",
+      options: ["Crispy Well-Done", "Soft & Fluffy"],
+      addOns: [
+        { id: "desi-ghee", name: "Brushed with Pure Desi Ghee", price: 20, icon: "🧈" },
+        { id: "cheese-stuffed", name: "Stuffed Molten Cheese", price: 45, icon: "🧀" },
+        { id: "kalonji-seeds", name: "Nigella (Kalonji) Seeds", price: 10, icon: "✨" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 16,
@@ -286,6 +452,17 @@ export const menuItems = [
     rating: 4.9,
     prepTimeMinutes: 10,
     available: true,
+    customizable: true,
+    customization: {
+      type: "none",
+      options: ["Crispy Well-Done", "Soft & Fluffy"],
+      addOns: [
+        { id: "chili-garlic", name: "Extra Green Chili & Garlic", price: 20, icon: "🌶️" },
+        { id: "cheese-stuffed", name: "Stuffed Molten Cheese", price: 45, icon: "🧀" },
+        { id: "desi-ghee", name: "Brushed with Desi Ghee", price: 20, icon: "🧈" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 17,
@@ -304,6 +481,18 @@ export const menuItems = [
     rating: 4.9,
     prepTimeMinutes: 5,
     available: true,
+    customizable: true,
+    customization: {
+      type: "sweet",
+      options: ["Low Sugar", "Standard Sweet", "Extra Sweet", "Sugar-Free (Stevia)"],
+      addOns: [
+        { id: "dry-fruits-crush", name: "Crushed Almonds & Pistachios", price: 35, icon: "🌰" },
+        { id: "malai-layer", name: "Thick Fresh Malai Top", price: 25, icon: "🥛" },
+        { id: "kesar-strands", name: "Kashmiri Kesar Saffron Strands", price: 30, icon: "✨" },
+        { id: "extra-ice", name: "Chilled with Extra Ice", price: 0, icon: "🧊" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 18,
@@ -322,6 +511,17 @@ export const menuItems = [
     rating: 4.8,
     prepTimeMinutes: 8,
     available: true,
+    customizable: true,
+    customization: {
+      type: "sweet",
+      options: ["Without Sugar", "Mild Sweet", "Normal Sweet", "Extra Sweet"],
+      addOns: [
+        { id: "kadak-ginger", name: "Extra Kadak Crushed Ginger", price: 10, icon: "🫚" },
+        { id: "cardamom-boost", name: "Crushed Green Cardamom (Elaichi)", price: 15, icon: "🌿" },
+        { id: "jaggery-sweet", name: "Organic Jaggery (Gud) Substitute", price: 15, icon: "🍯" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 19,
@@ -340,6 +540,17 @@ export const menuItems = [
     rating: 4.9,
     prepTimeMinutes: 5,
     available: true,
+    customizable: true,
+    customization: {
+      type: "temperature",
+      options: ["Served Piping Hot", "Warm", "Room Temperature"],
+      addOns: [
+        { id: "icecream-vanilla", name: "Scoop of Vanilla Ice Cream", price: 50, icon: "🍨" },
+        { id: "pista-slivers", name: "Roasted Pistachio Slivers", price: 25, icon: "🌰" },
+        { id: "rabri-top", name: "Thick Kesar Rabri Drizzle", price: 45, icon: "🥛" }
+      ],
+      allowsNotes: true
+    }
   },
   {
     id: 20,
@@ -358,5 +569,16 @@ export const menuItems = [
     rating: 5.0,
     prepTimeMinutes: 12,
     available: true,
-  },
+    customizable: true,
+    customization: {
+      type: "temperature",
+      options: ["Served Fresh & Warm", "Standard Warm"],
+      addOns: [
+        { id: "icecream-vanilla", name: "Creamy Vanilla Ice Cream Scoop", price: 50, icon: "🍨" },
+        { id: "chocolate-fudge", name: "Hot Chocolate Fudge Drizzle", price: 35, icon: "🍫" },
+        { id: "choco-chips", name: "Belgian Choco Chips Sprinkles", price: 20, icon: "✨" }
+      ],
+      allowsNotes: true
+    }
+  }
 ];

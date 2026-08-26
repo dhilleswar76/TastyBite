@@ -385,12 +385,21 @@ function Menu() {
                       <button disabled className="out-of-stock-btn">
                         Currently Unavailable
                       </button>
+                    ) : item.customizable === false ? (
+                      <div className="card-actions-single">
+                        <button
+                          className="add-to-cart-btn-primary full-width-action"
+                          onClick={() => addToCart(item, 1)}
+                        >
+                          <span>+ Add to Cart (₹{item.price})</span>
+                        </button>
+                      </div>
                     ) : (
                       <div className="card-actions-duo">
                         <button
                           className="customize-btn"
                           onClick={() => openCustomizeModal(item)}
-                          title="Customize spice level and add-ons"
+                          title="Customize options and add-ons"
                         >
                           ⚙️ Customize
                         </button>

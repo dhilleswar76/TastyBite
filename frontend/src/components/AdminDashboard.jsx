@@ -3,6 +3,21 @@ import { Link } from 'react-router-dom';
 import { orderAPI, reservationAPI, menuAPI, contactAPI, eventAPI, reviewAPI } from '../services/api';
 import { menuItems as fallbackMenu } from '../data/menuData';
 
+const PRESET_ADDONS = [
+  { id: 'cheese', name: 'Extra Melted Cheese', price: 40, icon: '🧀' },
+  { id: 'garlic-butter', name: 'Garlic Butter Tadka', price: 25, icon: '🧄' },
+  { id: 'gravy', name: 'Extra Rich Gravy', price: 40, icon: '🍲' },
+  { id: 'boiled-egg', name: 'Boiled Spiced Egg', price: 25, icon: '🥚' },
+  { id: 'mint-chutney', name: 'Spiced Mint Chutney', price: 20, icon: '🌿' },
+  { id: 'crispy-onions', name: 'Fried Birista Onions', price: 25, icon: '🧅' },
+  { id: 'icecream', name: 'Vanilla Ice Cream Scoop', price: 50, icon: '🍨' },
+  { id: 'choco-fudge', name: 'Chocolate Fudge Drizzle', price: 35, icon: '🍫' },
+  { id: 'dry-fruits', name: 'Crushed Dry Fruits & Nuts', price: 35, icon: '🌰' },
+  { id: 'desi-ghee', name: 'Pure Desi Ghee Drizzle', price: 20, icon: '🧈' },
+  { id: 'schezwan', name: 'Fiery Schezwan Sauce', price: 25, icon: '🌶️' },
+  { id: 'extra-meat', name: 'Extra Meat / Chicken Portion', price: 80, icon: '🍗' },
+];
+
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('kds'); // 'kds', 'orders', 'reservations', 'menu', 'events', 'analytics', 'qr'
   const [loading, setLoading] = useState(true);
@@ -27,13 +42,14 @@ function AdminDashboard() {
   // Menu Modal State (Add / Edit)
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [editingMenuItem, setEditingMenuItem] = useState(null);
+  const [newAddon, setNewAddon] = useState({ name: '', price: '', icon: '✨' });
   const [menuFormData, setMenuFormData] = useState({
     name: '',
     description: '',
     price: '',
     category: 'starters',
     tag: 'Veg',
-    image: '/pictures-restaurant/Paneer-Tikka.png',
+    image: '/pictures-restaurant/Paneer-Tikka.webp',
     available: true,
     spiceLevel: 2,
     isChefSpecial: false,
@@ -41,6 +57,14 @@ function AdminDashboard() {
     protein: '16g',
     carbs: '28g',
     fats: '14g',
+    customizable: true,
+    customizationType: 'spicy',
+    customizationOptions: ['Mild', 'Medium', 'Hot', 'Extra Hot'],
+    addOns: [
+      { id: 'cheese', name: 'Extra Melted Cheese', price: 40, icon: '🧀' },
+      { id: 'mint-chutney', name: 'Spiced Mint Chutney', price: 20, icon: '🌿' },
+    ],
+    allowsNotes: true,
   });
   const [actionFeedback, setActionFeedback] = useState(null);
 
@@ -168,13 +192,14 @@ function AdminDashboard() {
   // --- MENU ITEM HANDLERS ---
   const handleOpenAddMenuModal = () => {
     setEditingMenuItem(null);
+    setNewAddon({ name: '', price: '', icon: '✨' });
     setMenuFormData({
       name: '',
       description: '',
       price: '',
       category: 'starters',
       tag: 'Veg',
-      image: '/pictures-restaurant/Paneer-Tikka.png',
+      image: '/pictures-restaurant/Paneer-Tikka.webp',
       available: true,
       spiceLevel: 2,
       isChefSpecial: false,
@@ -182,19 +207,41 @@ function AdminDashboard() {
       protein: '16g',
       carbs: '28g',
       fats: '14g',
+      customizable: true,
+      customizationType: 'spicy',
+      customizationOptions: ['Mild', 'Medium', 'Hot', 'Extra Hot'],
+      addOns: [
+        { id: 'cheese', name: 'Extra Melted Cheese', price: 40, icon: '🧀' },
+        { id: 'mint-chutney', name: 'Spiced Mint Chutney', price: 20, icon: '🌿' },
+      ],
+      allowsNotes: true,
     });
     setShowMenuModal(true);
   };
 
   const handleOpenEditMenuModal = (item) => {
     setEditingMenuItem(item);
+    setNewAddon({ name: '', price: '', icon: '✨' });
+    const isBeverage = item.category === 'beverages';
+    const isDessert = item.category === 'desserts';
+    const isBread = item.category === 'indian-breads';
+
+    const defaultType = isBeverage ? 'sweet' : isDessert ? 'temperature' : isBread ? 'none' : 'spicy';
+    const defaultOptions = isBeverage
+      ? ['Low Sugar', 'Normal Sweet', 'Extra Sweet', 'Sugar-Free (Stevia)']
+      : isDessert
+      ? ['Served Piping Hot', 'Warm', 'Room Temperature']
+      : isBread
+      ? ['Crispy Well-Done', 'Soft & Fluffy']
+      : ['Mild', 'Medium', 'Hot', 'Extra Hot'];
+
     setMenuFormData({
       name: item.name,
       description: item.description,
       price: item.price,
       category: item.category,
       tag: item.tag || 'Veg',
-      image: item.image || '/pictures-restaurant/Paneer-Tikka.png',
+      image: item.image || '/pictures-restaurant/Paneer-Tikka.webp',
       available: item.available !== false,
       spiceLevel: item.spiceLevel || 2,
       isChefSpecial: item.isChefSpecial || false,
@@ -202,8 +249,67 @@ function AdminDashboard() {
       protein: item.nutrition?.protein || '16g',
       carbs: item.nutrition?.carbs || '28g',
       fats: item.nutrition?.fats || '14g',
+      customizable: item.customizable !== false,
+      customizationType: item.customization?.type || defaultType,
+      customizationOptions: item.customization?.options || defaultOptions,
+      addOns: item.customization?.addOns || [],
+      allowsNotes: item.customization?.allowsNotes !== false,
     });
     setShowMenuModal(true);
+  };
+
+  const handleTogglePresetAddon = (preset) => {
+    setMenuFormData((prev) => {
+      const exists = prev.addOns.some((a) => a.id === preset.id || a.name === preset.name);
+      if (exists) {
+        return { ...prev, addOns: prev.addOns.filter((a) => a.id !== preset.id && a.name !== preset.name) };
+      } else {
+        return { ...prev, addOns: [...prev.addOns, preset] };
+      }
+    });
+  };
+
+  const handleRemoveAddon = (index) => {
+    setMenuFormData((prev) => ({
+      ...prev,
+      addOns: prev.addOns.filter((_, idx) => idx !== index),
+    }));
+  };
+
+  const handleAddCustomAddon = (e) => {
+    e.preventDefault();
+    if (!newAddon.name.trim() || !newAddon.price) {
+      showNotification('Please provide add-on name and price', 'error');
+      return;
+    }
+    const addonObj = {
+      id: `custom-${Date.now()}`,
+      name: newAddon.name.trim(),
+      price: Number(newAddon.price),
+      icon: newAddon.icon || '✨',
+    };
+    setMenuFormData((prev) => ({
+      ...prev,
+      addOns: [...prev.addOns, addonObj],
+    }));
+    setNewAddon({ name: '', price: '', icon: '✨' });
+    showNotification(`Added custom option "${addonObj.name}"!`);
+  };
+
+  const handleCustomizationTypeChange = (type) => {
+    let options = ['Mild', 'Medium', 'Hot', 'Extra Hot'];
+    if (type === 'sweet') {
+      options = ['Low Sugar', 'Normal Sweet', 'Extra Sweet', 'Sugar-Free (Stevia)'];
+    } else if (type === 'temperature') {
+      options = ['Served Piping Hot', 'Warm', 'Room Temperature', 'Chilled'];
+    } else if (type === 'none') {
+      options = ['Standard', 'Special Chef Style'];
+    }
+    setMenuFormData((prev) => ({
+      ...prev,
+      customizationType: type,
+      customizationOptions: options,
+    }));
   };
 
   const handleToggleMenuAvailability = async (item) => {
@@ -255,6 +361,20 @@ function AdminDashboard() {
           carbs: menuFormData.carbs,
           fats: menuFormData.fats,
         },
+        customizable: Boolean(menuFormData.customizable),
+        customization: menuFormData.customizable
+          ? {
+              type: menuFormData.customizationType,
+              options: menuFormData.customizationOptions,
+              addOns: menuFormData.addOns,
+              allowsNotes: menuFormData.allowsNotes !== false,
+            }
+          : {
+              type: 'none',
+              options: [],
+              addOns: [],
+              allowsNotes: false,
+            },
       };
 
       if (editingMenuItem && editingMenuItem._id) {
@@ -1197,7 +1317,7 @@ function AdminDashboard() {
                 <input
                   type="text"
                   required
-                  placeholder="/pictures-restaurant/Paneer-Tikka.png or https://..."
+                  placeholder="/pictures-restaurant/Paneer-Tikka.webp or https://..."
                   value={menuFormData.image}
                   onChange={(e) => setMenuFormData({ ...menuFormData, image: e.target.value })}
                 />
@@ -1236,6 +1356,132 @@ function AdminDashboard() {
                     <span>Chef's Spotlight Special</span>
                   </label>
                 </div>
+              </div>
+
+              {/* ==========================================================================
+                  CUSTOMIZATION TOGGLE & BUILDER SECTION
+                  ========================================================================== */}
+              <div className="admin-customization-builder-box">
+                <div className="custom-toggle-header-row">
+                  <label className="checkbox-label-prominent">
+                    <input
+                      type="checkbox"
+                      checked={menuFormData.customizable}
+                      onChange={(e) => setMenuFormData({ ...menuFormData, customizable: e.target.checked })}
+                    />
+                    <div>
+                      <strong>✨ Enable Item Customization</strong>
+                      <p>Allow diners to customize spice, sweetness, and add extras.</p>
+                    </div>
+                  </label>
+                </div>
+
+                {menuFormData.customizable && (
+                  <div className="custom-builder-content">
+                    {/* Choice Type Selector */}
+                    <div className="form-group">
+                      <label>Primary Choice Type</label>
+                      <select
+                        value={menuFormData.customizationType}
+                        onChange={(e) => handleCustomizationTypeChange(e.target.value)}
+                        className="admin-select-input"
+                      >
+                        <option value="spicy">🌶️ Spiciness (Mild, Medium, Hot, Extra Hot)</option>
+                        <option value="sweet">🍯 Sweetness (Low Sugar, Normal, Extra Sweet, Sugar-Free)</option>
+                        <option value="temperature">🌡️ Serving Temperature (Hot, Warm, Chilled)</option>
+                        <option value="none">✨ Style / Add-ons Only</option>
+                      </select>
+                    </div>
+
+                    {/* Active Add-ons for this dish */}
+                    <div className="custom-addons-manager-group">
+                      <label className="sub-lbl">
+                        Active Add-ons for this Dish ({menuFormData.addOns?.length || 0}):
+                      </label>
+                      {menuFormData.addOns && menuFormData.addOns.length > 0 ? (
+                        <div className="active-addons-chips-wrap">
+                          {menuFormData.addOns.map((addon, idx) => (
+                            <span key={idx} className="addon-active-chip">
+                              <span className="chip-icon">{addon.icon || '✨'}</span>
+                              <span className="chip-name">{addon.name}</span>
+                              <strong className="chip-price">+₹{addon.price}</strong>
+                              <button
+                                type="button"
+                                className="chip-remove-btn"
+                                onClick={() => handleRemoveAddon(idx)}
+                                title="Remove add-on"
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="no-addons-tip">No add-ons selected yet. Choose from presets below or create a custom one.</p>
+                      )}
+                    </div>
+
+                    {/* Quick Presets Library */}
+                    <div className="presets-library-section">
+                      <label className="sub-lbl">⚡ Quick Pick from Add-on Presets:</label>
+                      <div className="preset-pills-grid">
+                        {PRESET_ADDONS.map((preset) => {
+                          const isAlreadyAdded = menuFormData.addOns?.some(
+                            (a) => a.id === preset.id || a.name === preset.name
+                          );
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              className={`preset-pill-btn ${isAlreadyAdded ? 'added' : ''}`}
+                              onClick={() => handleTogglePresetAddon(preset)}
+                            >
+                              <span>{preset.icon} {preset.name} (+₹{preset.price})</span>
+                              <strong className="plus-minus-tag">{isAlreadyAdded ? '✓' : '+'}</strong>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Create New Custom Add-on for this product */}
+                    <div className="create-custom-addon-bar">
+                      <label className="sub-lbl">➕ Create New Custom Option for this Product:</label>
+                      <div className="custom-addon-inputs-row">
+                        <input
+                          type="text"
+                          placeholder="Icon (e.g. 🧀)"
+                          value={newAddon.icon}
+                          onChange={(e) => setNewAddon({ ...newAddon, icon: e.target.value })}
+                          className="addon-icon-input"
+                          maxLength="4"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Add-on Name (e.g. Truffle Butter)"
+                          value={newAddon.name}
+                          onChange={(e) => setNewAddon({ ...newAddon, name: e.target.value })}
+                          className="addon-name-input"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Price (₹)"
+                          min="0"
+                          value={newAddon.price}
+                          onChange={(e) => setNewAddon({ ...newAddon, price: e.target.value })}
+                          className="addon-price-input"
+                        />
+                        <button
+                          type="button"
+                          className="add-addon-action-btn"
+                          onClick={handleAddCustomAddon}
+                        >
+                          + Add Option
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="admin-modal-actions">

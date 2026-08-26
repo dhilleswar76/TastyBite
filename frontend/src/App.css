@@ -1227,6 +1227,16 @@ a:hover {
   border-color: var(--primary);
 }
 
+.card-actions-single {
+  display: flex;
+  width: 100%;
+}
+
+.add-to-cart-btn-primary.full-width-action {
+  width: 100%;
+  padding: 0.75rem 1rem;
+}
+
 .add-to-cart-btn-primary {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: #fff;
@@ -3958,6 +3968,212 @@ footer { background: #110e0a; color: var(--text-dim); padding: 3rem 1.5rem 2rem;
 .checkbox-group { flex-direction: row !important; align-items: center; }
 .checkbox-label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
 .checkbox-label input { width: 18px; height: 18px; accent-color: var(--primary); }
+
+/* Customization Builder Box */
+.admin-customization-builder-box {
+  background: #14100c;
+  border: 1px solid #3d3122;
+  border-radius: var(--radius-md);
+  padding: 1.2rem;
+  margin-top: 0.5rem;
+}
+
+.custom-toggle-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.checkbox-label-prominent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  cursor: pointer;
+}
+
+.checkbox-label-prominent input {
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+  accent-color: var(--primary);
+}
+
+.checkbox-label-prominent strong {
+  font-size: 1rem;
+  color: #ffb74d;
+  display: block;
+}
+
+.checkbox-label-prominent p {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.custom-builder-content {
+  margin-top: 1.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px dashed #3a2e20;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.sub-lbl {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--gold-light);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* Active Add-on Chips */
+.active-addons-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.addon-active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #251d16;
+  border: 1px solid #4a3a28;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  color: #fff;
+}
+
+.addon-active-chip .chip-icon {
+  font-size: 1rem;
+}
+
+.addon-active-chip .chip-name {
+  font-weight: 600;
+}
+
+.addon-active-chip .chip-price {
+  color: var(--primary);
+  font-size: 0.8rem;
+}
+
+.chip-remove-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #bbb;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.chip-remove-btn:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.no-addons-tip {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Presets Library */
+.preset-pills-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.preset-pill-btn {
+  background: #1e1812;
+  border: 1px solid #3a2e21;
+  color: #ccc;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.preset-pill-btn:hover {
+  background: #2b2219;
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.preset-pill-btn.added {
+  background: rgba(255, 123, 0, 0.15);
+  border-color: var(--primary);
+  color: #ffb74d;
+}
+
+.plus-minus-tag {
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+/* Custom Addon Inputs Bar */
+.create-custom-addon-bar {
+  background: #1a140e;
+  border: 1px solid #33271a;
+  border-radius: var(--radius-sm);
+  padding: 0.9rem;
+}
+
+.custom-addon-inputs-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 100px auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.addon-icon-input {
+  text-align: center;
+  padding: 0.55rem !important;
+}
+
+.addon-name-input,
+.addon-price-input {
+  padding: 0.55rem !important;
+  font-size: 0.85rem !important;
+}
+
+.add-addon-action-btn {
+  background: #33271a;
+  border: 1px solid #5a452d;
+  color: #ffb74d;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.add-addon-action-btn:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+@media (max-width: 600px) {
+  .custom-addon-inputs-row {
+    grid-template-columns: 1fr;
+  }
+}
 
 .admin-modal-actions { display: flex; justify-content: flex-end; gap: 0.8rem; margin-top: 1rem; }
 .btn-cancel { background: #261f18; color: #ccc; border: 1px solid #3d3227; padding: 0.75rem 1.4rem; border-radius: var(--radius-sm); cursor: pointer; }

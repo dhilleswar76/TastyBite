@@ -78,6 +78,33 @@ const menuItemSchema = new mongoose.Schema({
     type: Number,
     default: 20,
   },
+  customizable: {
+    type: Boolean,
+    default: true,
+  },
+  customization: {
+    type: {
+      type: String,
+      enum: ['spicy', 'sweet', 'temperature', 'none'],
+      default: 'spicy',
+    },
+    options: {
+      type: [String],
+      default: ['Mild', 'Medium', 'Hot', 'Extra Hot'],
+    },
+    addOns: [
+      {
+        id: String,
+        name: String,
+        price: Number,
+        icon: { type: String, default: '✨' },
+      },
+    ],
+    allowsNotes: {
+      type: Boolean,
+      default: true,
+    },
+  },
   createdAt: {
     type: Date,
     default: Date.now,
