@@ -35,7 +35,10 @@ function Contact() {
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Active FAQ Accordion index
+  // Main FAQ Section Open / Collapse Toggle
+  const [isFaqSectionOpen, setIsFaqSectionOpen] = useState(false);
+
+  // Active individual FAQ Accordion index
   const [activeFaq, setActiveFaq] = useState(0);
 
   // Calculate live restaurant status (Open/Closed)
@@ -113,10 +116,6 @@ function Contact() {
       setLoading(false);
     }
   };
-
-  const mapAddressQuery = encodeURIComponent(
-    'Ambeerupeta village, Srikakulam dist, Andhra Pradesh 532429'
-  );
 
   return (
     <section id="contact" className="section contact-premium-section">
@@ -247,9 +246,9 @@ function Contact() {
         </div>
       </div>
 
-      {/* Main Interactive Contact Container (Form + Map + FAQ) */}
-      <div className="contact-main-grid">
-        {/* Left Column: Interactive Contact Form */}
+      {/* Stacked Section: Message Form (Top) and Collapsible FAQ Section (Below) */}
+      <div className="contact-stacked-layout">
+        {/* Send Direct Message Card */}
         <div className="contact-form-card">
           <div className="form-card-header">
             <h3>✉️ Send a Direct Message</h3>
@@ -377,55 +376,30 @@ function Contact() {
           )}
         </div>
 
-        {/* Right Column: Location Map Preview & Quick FAQs */}
-        <div className="contact-right-column">
-          {/* Interactive Location Showcase */}
-          <div className="location-showcase-card">
-            <div className="location-card-top">
-              <div className="loc-badge">📍 Ambeerupeta, Srikakulam</div>
-              <h4>TastyBite Restaurant &amp; Rooftop Dining</h4>
-            </div>
-
-            {/* Google Map Embed Frame */}
-            <div className="map-embed-wrapper">
-              <iframe
-                title="TastyBite Restaurant Location Map - Ambeerupeta"
-                src="https://maps.google.com/maps?q=Ambeerupeta,+Andhra+Pradesh&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                width="100%"
-                height="220"
-                style={{ border: 0, borderRadius: '10px' }}
-                allowFullScreen=""
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              ></iframe>
-            </div>
-
-            <div className="location-features-chips">
-              <div className="loc-chip">
-                <span>🚗</span>
-                <div>
-                  <strong>Easy Highway Access</strong>
-                  <small>Located right on the main approach</small>
-                </div>
-              </div>
-              <div className="loc-chip">
-                <span>🅿️</span>
-                <div>
-                  <strong>Spacious Parking</strong>
-                  <small>Free 2-wheeler &amp; 4-wheeler parking</small>
-                </div>
+        {/* Expandable FAQs Accordion Component (Directly Below Form) */}
+        <div className="contact-faq-card">
+          {/* Main FAQ Toggle Header */}
+          <button
+            type="button"
+            className="faq-main-toggle-header"
+            onClick={() => setIsFaqSectionOpen((prev) => !prev)}
+            aria-expanded={isFaqSectionOpen}
+          >
+            <div className="faq-toggle-left">
+              <span className="faq-main-icon">❓</span>
+              <div>
+                <h3>Frequently Asked Questions</h3>
+                <p>Click to {isFaqSectionOpen ? 'hide' : 'view'} answers to common dining, reservation &amp; delivery queries</p>
               </div>
             </div>
-          </div>
-
-          {/* Frequently Asked Questions (FAQ) Accordion */}
-          <div className="contact-faq-card">
-            <div className="faq-header">
-              <h3>❓ Frequently Asked Questions</h3>
-              <p>Quick answers to common questions about dining with us.</p>
+            <div className={`faq-main-toggle-btn-badge ${isFaqSectionOpen ? 'open' : ''}`}>
+              <span>{isFaqSectionOpen ? '−' : '+'}</span>
             </div>
+          </button>
 
-            <div className="faq-accordion-list">
+          {/* Collapsible FAQ Body */}
+          {isFaqSectionOpen && (
+            <div className="faq-accordion-list-expanded">
               {faqs.map((faq, idx) => {
                 const isOpen = activeFaq === idx;
                 return (
@@ -434,11 +408,12 @@ function Contact() {
                     className={`faq-accordion-item ${isOpen ? 'open' : ''}`}
                   >
                     <button
+                      type="button"
                       className="faq-question-btn"
                       onClick={() => setActiveFaq(isOpen ? -1 : idx)}
                       aria-expanded={isOpen}
                     >
-                      <span>{faq.q}</span>
+                      <span className="faq-q-text">{faq.q}</span>
                       <span className="faq-chevron">{isOpen ? '−' : '+'}</span>
                     </button>
                     {isOpen && (
@@ -450,7 +425,7 @@ function Contact() {
                 );
               })}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>
