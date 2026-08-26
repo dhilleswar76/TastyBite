@@ -165,7 +165,7 @@ function Contact() {
             <span>❄️ AC &amp; Rooftop Dining</span>
           </div>
           <a
-            href="https://www.google.com/maps/place/Ambeerupeta,+Andhra+Pradesh/@18.3997965,84.1121061,17.84z/data=!4m9!1m8!3m7!1s0x3a3c4859c0875cf5:0x6756049bfdcee72d!2sAmbeerupeta,+Andhra+Pradesh!3b1!8m2!3d18.3995865!4d84.1130006!16s%2Fg%2F12hkxmj9g"
+            href="https://www.google.com/maps/place/Ambeerupeta,+Andhra+Pradesh/@18.4013201,84.1072338,15z/data=!3m1!4b1!4m6!3m5!1s0x3a3c4859c0875cf5:0x6756049bfdcee72d!8m2!3d18.3995865!4d84.1130006!16s%2Fg%2F12hkxmj9g"
             target="_blank"
             rel="noopener noreferrer"
             className="channel-action-btn"
@@ -389,8 +389,8 @@ function Contact() {
             {/* Google Map Embed Frame */}
             <div className="map-embed-wrapper">
               <iframe
-                title="TastyBite Restaurant Location Map"
-                src="https://maps.google.com/maps?q=18.3997965,84.1121061&hl=en&z=17&output=embed"
+                title="TastyBite Restaurant Location Map - Ambeerupeta"
+                src="https://maps.google.com/maps?q=Ambeerupeta,+Andhra+Pradesh&t=&z=15&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="220"
                 style={{ border: 0, borderRadius: '10px' }}
