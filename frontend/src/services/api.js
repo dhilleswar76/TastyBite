@@ -229,7 +229,18 @@ export const orderAPI = {
 
 // Contact API
 export const contactAPI = {
-  // Send contact message
+  // Send / Submit contact message
+  submit: async (contactData) => {
+    const response = await fetch(`${API_URL}/contact`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(contactData),
+    });
+    return parseResponse(response, 'Failed to send message');
+  },
+
   send: async (contactData) => {
     const response = await fetch(`${API_URL}/contact`, {
       method: 'POST',
@@ -245,6 +256,26 @@ export const contactAPI = {
   getAll: async () => {
     const response = await fetch(`${API_URL}/contact`);
     return parseResponse(response, 'Failed to fetch messages');
+  },
+
+  // Update contact status (admin)
+  updateStatus: async (id, status) => {
+    const response = await fetch(`${API_URL}/contact/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    });
+    return parseResponse(response, 'Failed to update contact status');
+  },
+
+  // Delete contact message (admin)
+  delete: async (id) => {
+    const response = await fetch(`${API_URL}/contact/${id}`, {
+      method: 'DELETE',
+    });
+    return parseResponse(response, 'Failed to delete contact message');
   },
 };
 
@@ -317,4 +348,5 @@ export const eventAPI = {
     return parseResponse(response, 'Failed to delete event inquiry');
   },
 };
+
 
