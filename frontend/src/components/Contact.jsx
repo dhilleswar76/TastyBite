@@ -165,7 +165,7 @@ function Contact() {
             <span>❄️ AC &amp; Rooftop Dining</span>
           </div>
           <a
-            href={`https://www.google.com/maps/search/?api=1&query=${mapAddressQuery}`}
+            href="https://www.google.com/maps/place/Ambeerupeta,+Andhra+Pradesh/@18.3997965,84.1121061,17.84z/data=!4m9!1m8!3m7!1s0x3a3c4859c0875cf5:0x6756049bfdcee72d!2sAmbeerupeta,+Andhra+Pradesh!3b1!8m2!3d18.3995865!4d84.1130006!16s%2Fg%2F12hkxmj9g"
             target="_blank"
             rel="noopener noreferrer"
             className="channel-action-btn"
@@ -390,7 +390,7 @@ function Contact() {
             <div className="map-embed-wrapper">
               <iframe
                 title="TastyBite Restaurant Location Map"
-                src="https://maps.google.com/maps?q=Ambeerupeta%20village%2C%20Srikakulam%20dist%2C%20Andhra%20Pradesh%20532429&t=&z=14&ie=UTF8&iwloc=&output=embed"
+                src="https://maps.google.com/maps?q=18.3997965,84.1121061&hl=en&z=17&output=embed"
                 width="100%"
                 height="220"
                 style={{ border: 0, borderRadius: '10px' }}
