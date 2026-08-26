@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const AMBIANCE_SPACES = [
   {
@@ -38,6 +38,8 @@ const AMBIANCE_SPACES = [
 function AmbianceGallery() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
+  const audioContextRef = useRef(null);
+  const intervalRef = useRef(null);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev === 0 ? AMBIANCE_SPACES.length - 1 : prev - 1));
@@ -49,15 +51,90 @@ function AmbianceGallery() {
 
   const activeSpace = AMBIANCE_SPACES[currentIndex];
 
-  const toggleMusic = () => {
-    setIsPlayingMusic(!isPlayingMusic);
+  // Ambient sound synthesizer using Web Audio API
+  const startAmbientSynth = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      audioContextRef.current = ctx;
+
+      // Warm jazz chord progression frequencies (Cmaj7 -> Am7 -> Dm7 -> G7)
+      const chords = [
+        [261.63, 329.63, 392.00, 493.88], // Cmaj7
+        [220.00, 261.63, 329.63, 392.00], // Am7
+        [293.66, 349.23, 440.00, 523.25], // Dm7
+        [196.00, 246.94, 293.66, 349.23], // G7
+      ];
+
+      let chordIdx = 0;
+
+      const playChord = () => {
+        if (!audioContextRef.current || audioContextRef.current.state === 'closed') return;
+        const currentChord = chords[chordIdx % chords.length];
+        chordIdx++;
+
+        currentChord.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = i === 0 ? 'triangle' : 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+          // Soft ambient volume envelope
+          gain.gain.setValueAtTime(0, ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.025, ctx.currentTime + 1.2);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 3.8);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(ctx.currentTime + i * 0.15);
+          osc.stop(ctx.currentTime + 4.0);
+        });
+      };
+
+      playChord();
+      intervalRef.current = setInterval(playChord, 3600);
+    } catch (e) {
+      console.warn('Audio synth error:', e);
+    }
   };
+
+  const stopAmbientSynth = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try {
+        audioContextRef.current.close();
+      } catch (e) {}
+      audioContextRef.current = null;
+    }
+  };
+
+  const toggleMusic = () => {
+    if (isPlayingMusic) {
+      stopAmbientSynth();
+      setIsPlayingMusic(false);
+    } else {
+      startAmbientSynth();
+      setIsPlayingMusic(true);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopAmbientSynth();
+    };
+  }, []);
 
   return (
     <section id="ambiance" className="section ambiance-section-wrap">
       <div className="section-header-wrap">
         <h2 className="section-title">
-          <span className="symbol">&mdash;</span> Ambiance & Virtual Tour <span className="symbol">&mdash;</span>
+          <span className="symbol">&mdash;</span> Ambiance &amp; Virtual Tour <span className="symbol">&mdash;</span>
         </h2>
         <p className="section-subtitle">
           Immerse yourself in our distinct dining zones, designed for unforgettable gatherings, romance, and celebrations.
@@ -66,11 +143,12 @@ function AmbianceGallery() {
         {/* Ambient Sound Toggle */}
         <div className="music-toggle-container">
           <button
+            type="button"
             className={`ambient-audio-btn ${isPlayingMusic ? 'playing' : ''}`}
             onClick={toggleMusic}
           >
-            <span>{isPlayingMusic ? '🔊 Lounge Jazz Music: Playing' : '🔇 Play Ambient Restaurant Jazz'}</span>
-            {isPlayingMusic && <span className="sound-wave-anim">🎵</span>}
+            <span>{isPlayingMusic ? '🔊 Lounge Jazz Ambient: Playing' : '🎵 Play Ambient Restaurant Jazz'}</span>
+            {isPlayingMusic && <span className="sound-wave-anim">🎶</span>}
           </button>
         </div>
       </div>
