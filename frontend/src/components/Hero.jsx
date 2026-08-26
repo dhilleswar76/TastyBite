@@ -2,15 +2,25 @@ function Hero() {
   return (
     <section id="home" className="hero">
       <div className="hero-content">
-        <h1>
-          <strong>Welcome to TastyBite</strong>
-        </h1>
-        <p>Your favorite place for delicious meals and great ambiance.</p>
-        <p>Fresh, local ingredients. Cozy atmosphere. Unforgettable taste.</p>
-        <p>Experience the best dining with us.</p>
-        <a href="#reservations" className="btn">
-          Book a Table
-        </a>
+        <span className="hero-badge">✨ ROYAL FLAVORS &amp; LUXURY DINING</span>
+        <h1>Authentic Flavors. Unforgettable Memories.</h1>
+        <p>
+          Experience handcrafted dum biryanis, clay oven tandoori delicacies, and artisanal desserts prepared with royal spices and pure culinary passion.
+        </p>
+        <div className="hero-btn-group">
+          <a href="#menu" className="btn-hero-primary">
+            Explore Menu &amp; Order 🛒
+          </a>
+          <a href="#reservations" className="btn-hero-secondary">
+            Reserve a Table 📅
+          </a>
+        </div>
+        <div className="hero-highlights-strip">
+          <div className="highlight-item">⭐ 4.9/5 (1,480+ Diners)</div>
+          <div className="highlight-item">🌙 100% Halal Certified</div>
+          <div className="highlight-item">🛵 ~30 Min Express Delivery</div>
+          <div className="highlight-item">👑 Master Chefs</div>
+        </div>
       </div>
     </section>
   );

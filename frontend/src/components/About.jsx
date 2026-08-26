@@ -1,26 +1,47 @@
 function About() {
   return (
-    <section id="about" className="section">
-      <h2 className="section-title">
-        <span className="symbol">&mdash;</span> About Us <span className="symbol">&mdash;</span>
-      </h2>
-      <div className="about-section">
-        <div className="about-image">
-          <img src="/pictures-restaurant/chicken-dum-biryani.jpg" alt="Recipe" />
+    <section id="about" className="section section-alt">
+      <div className="section-header-wrap">
+        <h2 className="section-title">
+          <span className="symbol">&mdash;</span> Our Culinary Heritage <span className="symbol">&mdash;</span>
+        </h2>
+        <p className="section-subtitle">
+          Crafting unforgettable dining memories with authentic slow-cooking traditions and royal Indian hospitality.
+        </p>
+      </div>
+
+      <div className="about-grid">
+        <div className="about-img-frame">
+          <img src="/pictures-restaurant/front-page-picture.png" alt="TastyBite Restaurant Ambiance" />
         </div>
 
         <div className="about-content">
-          <p className="about-info1">
-            At TastyBite, we believe in simple, honest food made with love. Our chefs
-            use fresh, seasonal ingredients to create dishes inspired by classic
-            Italian cuisine with a modern twist.
+          <h3>Passionate Chefs. Hand-Ground Spices.</h3>
+          <p>
+            Founded on a passion for culinary excellence, TastyBite is celebrated for bringing authentic flavors alive. From royal Hyderabadi sealed-pot Dum Biryanis to smoky clay-oven tandoori kebabs, every dish is an ode to traditional recipes.
           </p>
-          <br />
-          <p className="about-info2">
-            Whether you&apos;re looking for a romantic dinner, a family celebration, or a
-            casual meal with friends, our warm and welcoming atmosphere is perfect
-            for every occasion.
+          <p>
+            Whether you are joining us for an intimate rooftop dinner, a family anniversary, or placing an express order to your doorstep, we guarantee mouthwatering perfection in every single bite.
           </p>
+
+          <div className="about-features-grid">
+            <div className="about-feat-box">
+              <strong>🔥 Traditional Clay Tandoors</strong>
+              <span>Smoky charred perfection</span>
+            </div>
+            <div className="about-feat-box">
+              <strong>🌿 100% Fresh Farm Sourcing</strong>
+              <span>Zero artificial preservatives</span>
+            </div>
+            <div className="about-feat-box">
+              <strong>👑 Royal Hand-Ground Spices</strong>
+              <span>Authentic whole spice blends</span>
+            </div>
+            <div className="about-feat-box">
+              <strong>⭐ 5-Star Hospitality</strong>
+              <span>Dedicated dining concierges</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
