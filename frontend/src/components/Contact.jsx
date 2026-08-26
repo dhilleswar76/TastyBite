@@ -1,11 +1,7 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { contactAPI } from '../services/api';
 
 function Contact() {
-  // Selected Inquiry Topic
-  const [topic, setTopic] = useState('Table Inquiry');
-
-  // Form State
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -13,6 +9,11 @@ function Contact() {
     subject: '',
     message: '',
   });
+
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [showFaqs, setShowFaqs] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
   useEffect(() => {
     try {
@@ -31,70 +32,33 @@ function Contact() {
     }
   }, []);
 
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-
-  // Main FAQ Section Open / Collapse Toggle
-  const [isFaqSectionOpen, setIsFaqSectionOpen] = useState(false);
-
-  // Active individual FAQ Accordion index
-  const [activeFaq, setActiveFaq] = useState(0);
-
-  // Calculate live restaurant status (Open/Closed)
-  const isRestaurantOpen = useMemo(() => {
-    const now = new Date();
-    const day = now.getDay(); // 0 = Sun, 6 = Sat
-    const hour = now.getHours();
-
-    const isWeekend = day === 0 || day === 6;
-    if (isWeekend) {
-      return hour >= 6 && hour < 24; // 6 AM - Midnight
-    } else {
-      return hour >= 9 && hour < 22; // 9 AM - 10 PM
-    }
-  }, []);
-
-  const topicsList = [
-    { id: 'Table Inquiry', icon: '🍽️', label: 'Table Booking' },
-    { id: 'Event & Catering', icon: '🎉', label: 'Banquet & Events' },
-    { id: 'Delivery Help', icon: '🚚', label: 'Order & Delivery' },
-    { id: 'Feedback', icon: '⭐', label: 'Dining Feedback' },
-    { id: 'Dietary Question', icon: '👨‍🍳', label: 'Dietary / Chef' },
-  ];
-
   const faqs = [
     {
-      q: 'Do I need prior table reservations for family dinners or weekends?',
-      a: 'Walk-ins are warmly welcomed at any time! However, for Friday to Sunday dinners (7:00 PM – 10:00 PM) or family gatherings with 4+ guests, we strongly recommend reserving a table online to guarantee your preferred seating.',
+      q: 'Do I need a reservation to dine in?',
+      a: 'Walk-ins are always welcome. However, we recommend making a reservation for weekend dinners or for groups of 4 or more to ensure immediate seating.',
     },
     {
-      q: 'Are all meats 100% Halal and are vegetarian dishes prepared separately?',
-      a: 'Yes, 100% of our chicken and mutton dishes are certified Halal. Furthermore, our Pure Veg kitchen stations, cookware, and clay tandoors are strictly isolated to guarantee absolute purity.',
+      q: 'Is the food 100% Halal certified and vegetarian friendly?',
+      a: 'Yes, all our chicken and mutton dishes are strictly Halal certified. We also prepare vegetarian dishes in dedicated cookware to maintain absolute separation.',
     },
     {
-      q: 'What is your delivery coverage and estimated preparation duration?',
-      a: 'We offer express hot delivery within a 15 km radius. Most orders are freshly cooked and delivered in insulated temperature-controlled packaging within 25–40 minutes.',
+      q: 'Do you offer home delivery and how long does it take?',
+      a: 'Yes, we deliver within a 15 km radius. Most orders are freshly prepared and delivered in approximately 30 to 40 minutes.',
     },
     {
-      q: 'Can I host private birthday parties, corporate dinners, or large banquets?',
-      a: 'Absolutely! TastyBite features a rooftop garden and private VIP dining rooms accommodating 20 to 150 guests. We also provide custom live buffet catering.',
-    },
-    {
-      q: 'What payment options and discounts are accepted at TastyBite?',
-      a: 'We accept UPI (Google Pay, PhonePe, Paytm), All Major Credit/Debit Cards, Net Banking, Cash on Delivery, and your earned TastyPoints loyalty rewards.',
+      q: 'Can we book the restaurant for private events or birthday parties?',
+      a: 'Yes, we have private dining spaces and a rooftop section available for family celebrations, birthdays, and corporate events. Contact us for custom catering menus.',
     },
   ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage('');
     setLoading(true);
 
     const payload = {
       name: formData.name.trim(),
       email: formData.email.trim(),
-      subject: `[${topic}] ${formData.subject.trim() || topic}`,
+      subject: formData.subject.trim() || 'General Inquiry',
       message: `${formData.phone ? `Phone: ${formData.phone.trim()}\n` : ''}${formData.message.trim()}`,
     };
 
@@ -109,315 +73,199 @@ function Contact() {
         message: '',
       }));
     } catch (err) {
-      // In case backend is offline, provide graceful success simulation for demo/guest experience
-      console.warn('Contact API note:', err.message);
+      console.warn('Contact submission note:', err.message);
       setSubmitted(true);
     } finally {
       setLoading(false);
     }
   };
 
+  const toggleFaqItem = (index) => {
+    setOpenFaqIndex((prev) => (prev === index ? null : index));
+  };
+
   return (
-    <section id="contact" className="section contact-premium-section">
-      {/* Section Header */}
+    <section id="contact" className="section contact-section">
       <div className="section-header-wrap">
         <h2 className="section-title">
-          <span className="symbol">&mdash;</span> Connect With Us{' '}
+          <span className="symbol">&mdash;</span> Contact Us{' '}
           <span className="symbol">&mdash;</span>
         </h2>
         <p className="section-subtitle">
-          Have a question, feedback, or planning a special celebration? We’re always here to assist you with genuine hospitality.
+          We would love to hear from you. Reach out with questions, feedback, or table inquiries.
         </p>
-
-        {/* Live Status Pill */}
-        <div className="contact-status-pill-wrap">
-          <span
-            className={`live-status-pill ${
-              isRestaurantOpen ? 'status-open' : 'status-closed'
-            }`}
-          >
-            <span className="status-indicator-dot"></span>
-            {isRestaurantOpen
-              ? '🟢 Kitchen Open Now (Serving Dine-In & Express Delivery)'
-              : '🔴 Currently Closed (Opens at 09:00 AM)'}
-          </span>
-        </div>
       </div>
 
-      {/* 4 Interactive Contact Channels Cards */}
-      <div className="contact-channels-grid">
-        {/* Location Card */}
-        <div className="channel-card">
-          <div className="channel-icon-wrap location-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-              <circle cx="12" cy="9" r="2.5" />
-            </svg>
-          </div>
-          <h3>Visit Our Restaurant</h3>
-          <p className="channel-desc">
-            Ambeerupeta village, Srikakulam dist,<br />
-            Andhra Pradesh 532429
-          </p>
-          <div className="channel-amenity-tags">
-            <span>🅿️ Free Valet Parking</span>
-            <span>❄️ AC &amp; Rooftop Dining</span>
-          </div>
-          <a
-            href="https://www.google.com/maps/place/Ambeerupeta,+Andhra+Pradesh/@18.4013201,84.1072338,15z/data=!3m1!4b1!4m6!3m5!1s0x3a3c4859c0875cf5:0x6756049bfdcee72d!8m2!3d18.3995865!4d84.1130006!16s%2Fg%2F12hkxmj9g"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="channel-action-btn"
-          >
-            🗺️ Get Google Maps Directions &rarr;
-          </a>
-        </div>
-
-        {/* Phone & WhatsApp Card */}
-        <div className="channel-card highlight-channel">
-          <div className="channel-icon-wrap phone-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-            </svg>
-          </div>
-          <h3>Direct Call &amp; WhatsApp</h3>
-          <p className="channel-desc">
-            Immediate table reservations, takeout status &amp; priority customer assistance.
-          </p>
-          <div className="channel-phone-number">+91 88856 36899</div>
-          <div className="channel-dual-actions">
-            <a href="tel:+918885636899" className="channel-action-btn phone-call-btn">
-              📞 Direct Call
-            </a>
+      <div className="contact-container">
+        {/* Contact Info Cards */}
+        <div className="contact-cards-row">
+          <div className="contact-card">
+            <h4>Address</h4>
+            <p>Ambeerupeta village, Srikakulam dist, Andhra Pradesh 532429</p>
             <a
-              href="https://wa.me/918885636899?text=Hello%20TastyBite%2C%20I%20would%20like%20to%20inquire%20about%20dining%20and%20table%20reservation."
+              href="https://www.google.com/maps/place/Ambeerupeta,+Andhra+Pradesh/@18.4013201,84.1072338,15z/data=!3m1!4b1!4m6!3m5!1s0x3a3c4859c0875cf5:0x6756049bfdcee72d!8m2!3d18.3995865!4d84.1130006!16s%2Fg%2F12hkxmj9g"
               target="_blank"
               rel="noopener noreferrer"
-              className="channel-action-btn whatsapp-btn"
+              className="card-link"
             >
-              💬 WhatsApp Chat
+              View on Google Maps &rarr;
+            </a>
+          </div>
+
+          <div className="contact-card">
+            <h4>Phone &amp; WhatsApp</h4>
+            <p>+91 88856 36899</p>
+            <div className="card-actions">
+              <a href="tel:+918885636899" className="card-btn">
+                Call Now
+              </a>
+              <a
+                href="https://wa.me/918885636899?text=Hello%20TastyBite%2C%20I%20would%20like%20to%20inquire%20about%20dining."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="card-btn card-btn-secondary"
+              >
+                WhatsApp
+              </a>
+            </div>
+          </div>
+
+          <div className="contact-card">
+            <h4>Opening Hours</h4>
+            <p>
+              Mon &ndash; Fri: 09:00 AM &ndash; 10:00 PM<br />
+              Sat &ndash; Sun: 06:00 AM &ndash; 12:00 Midnight
+            </p>
+          </div>
+
+          <div className="contact-card">
+            <h4>Email</h4>
+            <p>dilleswararaomalla410@gmail.com</p>
+            <a href="mailto:dilleswararaomalla410@gmail.com" className="card-link">
+              Send an Email &rarr;
             </a>
           </div>
         </div>
 
-        {/* Operating Hours Card */}
-        <div className="channel-card">
-          <div className="channel-icon-wrap hours-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          </div>
-          <h3>Operating Hours</h3>
-          <div className="hours-schedule-list">
-            <div className="hours-row">
-              <span className="days-label">Mon – Fri (Weekdays):</span>
-              <strong className="time-val">09:00 AM – 10:00 PM</strong>
-            </div>
-            <div className="hours-row weekend-highlight">
-              <span className="days-label">Sat – Sun (Weekends):</span>
-              <strong className="time-val">06:00 AM – 12:00 Midnight</strong>
-            </div>
-          </div>
-          <div className="channel-amenity-tags">
-            <span>⚡ Express Home Delivery Active</span>
-          </div>
-        </div>
-
-        {/* Direct Email Card */}
-        <div className="channel-card">
-          <div className="channel-icon-wrap email-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-              <polyline points="22,6 12,13 2,6" />
-            </svg>
-          </div>
-          <h3>Email Executive Support</h3>
-          <p className="channel-desc">
-            Catering quotes, bulk corporate orders, partnerships, and executive inquiries.
+        {/* Message Form */}
+        <div className="contact-form-box">
+          <h3>Send Us a Message</h3>
+          <p className="form-helper-text">
+            Fill out the form below and our team will get back to you as soon as possible.
           </p>
-          <div className="channel-email-text">dilleswararaomalla410@gmail.com</div>
-          <a
-            href="mailto:dilleswararaomalla410@gmail.com?subject=Inquiry%20from%20TastyBite%20Website"
-            className="channel-action-btn"
-          >
-            ✉️ Compose Email &rarr;
-          </a>
-        </div>
-      </div>
-
-      {/* Stacked Section: Message Form (Top) and Collapsible FAQ Section (Below) */}
-      <div className="contact-stacked-layout">
-        {/* Send Direct Message Card */}
-        <div className="contact-form-card">
-          <div className="form-card-header">
-            <h3>✉️ Send a Direct Message</h3>
-            <p>Our restaurant guest manager responds within 2 business hours.</p>
-          </div>
 
           {submitted ? (
-            <div className="contact-success-state">
-              <div className="success-icon-bounce">🎉</div>
-              <h3>Thank You for Contacting Us!</h3>
-              <p>
-                Your message regarding <strong>{topic}</strong> has been received by our restaurant management team. We will get back to you shortly.
-              </p>
+            <div className="form-success-box">
+              <h4>Thank you for reaching out!</h4>
+              <p>Your message has been received. We will get back to you shortly.</p>
               <button
-                className="btn-reset-contact"
+                type="button"
+                className="btn-simple"
                 onClick={() => setSubmitted(false)}
               >
                 Send Another Message
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="contact-interactive-form">
-              {/* Topic Selector Chips */}
-              <div className="topic-selector-group">
-                <label className="form-lbl">What is your message about?</label>
-                <div className="topic-chips-row">
-                  {topicsList.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      className={`topic-chip-btn ${topic === t.id ? 'active' : ''}`}
-                      onClick={() => setTopic(t.id)}
-                    >
-                      <span>{t.icon}</span>
-                      <span>{t.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Name & Email Row */}
-              <div className="form-grid-duo">
-                <div className="form-field-wrap">
-                  <label htmlFor="contact-name">Your Full Name *</label>
+            <form onSubmit={handleSubmit} className="contact-clean-form">
+              <div className="form-duo">
+                <div className="form-group">
+                  <label htmlFor="name">Full Name *</label>
                   <input
-                    id="contact-name"
+                    id="name"
                     type="text"
                     required
-                    placeholder="e.g. Rahul Sharma"
+                    placeholder="Your Name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
 
-                <div className="form-field-wrap">
-                  <label htmlFor="contact-email">Email Address *</label>
+                <div className="form-group">
+                  <label htmlFor="email">Email Address *</label>
                   <input
-                    id="contact-email"
+                    id="email"
                     type="email"
                     required
-                    placeholder="e.g. rahul@example.com"
+                    placeholder="Your Email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
               </div>
 
-              {/* Phone & Subject Row */}
-              <div className="form-grid-duo">
-                <div className="form-field-wrap">
-                  <label htmlFor="contact-phone">Phone / WhatsApp Number</label>
+              <div className="form-duo">
+                <div className="form-group">
+                  <label htmlFor="phone">Phone Number (Optional)</label>
                   <input
-                    id="contact-phone"
+                    id="phone"
                     type="tel"
-                    placeholder="e.g. +91 98765 43210"
+                    placeholder="Phone number"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />
                 </div>
 
-                <div className="form-field-wrap">
-                  <label htmlFor="contact-subject">Subject (Optional)</label>
+                <div className="form-group">
+                  <label htmlFor="subject">Subject</label>
                   <input
-                    id="contact-subject"
+                    id="subject"
                     type="text"
-                    placeholder="e.g. Table for 8 this Saturday evening"
+                    placeholder="What is this regarding?"
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                   />
                 </div>
               </div>
 
-              {/* Message Textarea */}
-              <div className="form-field-wrap">
-                <div className="field-label-between">
-                  <label htmlFor="contact-message">How can we assist you? *</label>
-                  <span className="char-counter">{formData.message.length} chars</span>
-                </div>
+              <div className="form-group">
+                <label htmlFor="message">Message *</label>
                 <textarea
-                  id="contact-message"
+                  id="message"
                   required
                   rows="4"
-                  placeholder="Please describe your dining inquiry, preferred date & time, event requirements, or dietary preferences..."
+                  placeholder="How can we help you?"
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 ></textarea>
               </div>
 
-              {errorMessage && (
-                <div className="form-error-banner">{errorMessage}</div>
-              )}
-
-              <button
-                type="submit"
-                className="contact-submit-primary-btn"
-                disabled={loading}
-              >
-                {loading ? (
-                  <span>Sending Message...</span>
-                ) : (
-                  <span>🚀 Send Message to TastyBite</span>
-                )}
+              <button type="submit" className="btn-contact-submit" disabled={loading}>
+                {loading ? 'Sending...' : 'Send Message'}
               </button>
             </form>
           )}
         </div>
 
-        {/* Expandable FAQs Accordion Component (Directly Below Form) */}
-        <div className="contact-faq-card">
-          {/* Main FAQ Toggle Header */}
+        {/* FAQs Accordion */}
+        <div className="contact-faqs-container">
           <button
             type="button"
-            className="faq-main-toggle-header"
-            onClick={() => setIsFaqSectionOpen((prev) => !prev)}
-            aria-expanded={isFaqSectionOpen}
+            className="faq-toggle-bar"
+            onClick={() => setShowFaqs(!showFaqs)}
+            aria-expanded={showFaqs}
           >
-            <div className="faq-toggle-left">
-              <span className="faq-main-icon">❓</span>
-              <div>
-                <h3>Frequently Asked Questions</h3>
-                <p>Click to {isFaqSectionOpen ? 'hide' : 'view'} answers to common dining, reservation &amp; delivery queries</p>
-              </div>
-            </div>
-            <div className={`faq-main-toggle-btn-badge ${isFaqSectionOpen ? 'open' : ''}`}>
-              <span>{isFaqSectionOpen ? '−' : '+'}</span>
-            </div>
+            <span>Frequently Asked Questions</span>
+            <span className="faq-toggle-sign">{showFaqs ? '−' : '+'}</span>
           </button>
 
-          {/* Collapsible FAQ Body */}
-          {isFaqSectionOpen && (
-            <div className="faq-accordion-list-expanded">
+          {showFaqs && (
+            <div className="faq-items-list">
               {faqs.map((faq, idx) => {
-                const isOpen = activeFaq === idx;
+                const isOpen = openFaqIndex === idx;
                 return (
-                  <div
-                    key={idx}
-                    className={`faq-accordion-item ${isOpen ? 'open' : ''}`}
-                  >
+                  <div key={idx} className={`faq-single-item ${isOpen ? 'active' : ''}`}>
                     <button
                       type="button"
-                      className="faq-question-btn"
-                      onClick={() => setActiveFaq(isOpen ? -1 : idx)}
+                      className="faq-question-row"
+                      onClick={() => toggleFaqItem(idx)}
                       aria-expanded={isOpen}
                     >
-                      <span className="faq-q-text">{faq.q}</span>
-                      <span className="faq-chevron">{isOpen ? '−' : '+'}</span>
+                      <span className="faq-q">{faq.q}</span>
+                      <span className="faq-arrow">{isOpen ? '−' : '+'}</span>
                     </button>
                     {isOpen && (
-                      <div className="faq-answer-body">
+                      <div className="faq-a-body">
                         <p>{faq.a}</p>
                       </div>
                     )}
