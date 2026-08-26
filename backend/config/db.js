@@ -6,18 +6,17 @@ const connectDB = async () => {
   }
 
   if (!process.env.MONGODB_URI) {
-    console.warn('MONGODB_URI environment variable is not defined.');
+    console.warn('⚠️ MONGODB_URI environment variable is not defined. Please add it to your Render/Vercel Environment Variables.');
     return;
   }
 
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`MongoDB connection error: ${error.message}`);
-    if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-      process.exit(1);
-    }
+    console.error(`❌ MongoDB connection error: ${error.message}`);
   }
 };
 

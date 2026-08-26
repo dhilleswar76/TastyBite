@@ -57,11 +57,19 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  connectDB().then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+// Start listening immediately on non-serverless environments (Render, local, VPS)
+if (!process.env.VERCEL) {
+  const host = '0.0.0.0';
+  const server = app.listen(PORT, host, () => {
+    console.log(`🚀 Server running on http://${host}:${PORT}`);
+    // Connect to database in the background
+    connectDB().catch((err) => {
+      console.error('Database connection error on start:', err.message);
     });
+  });
+
+  server.on('error', (err) => {
+    console.error('Server error on listen:', err.message);
   });
 }
 
