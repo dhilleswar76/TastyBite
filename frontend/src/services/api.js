@@ -1,5 +1,44 @@
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+// Helper to safely parse JSON responses and extract proper errors
+const parseResponse = async (response, defaultError = 'Request failed') => {
+  let data = null;
+  const contentType = response.headers.get('content-type');
+  
+  if (contentType && contentType.includes('application/json')) {
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+  } else {
+    try {
+      const text = await response.text();
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+  }
+
+  if (!response.ok) {
+    let errorMessage = defaultError;
+    if (data) {
+      if (Array.isArray(data.error)) {
+        errorMessage = data.error.join(', ');
+      } else if (data.error) {
+        errorMessage = data.error;
+      } else if (data.message) {
+        errorMessage = data.message;
+      }
+    } else {
+      errorMessage = `Server Error (${response.status}: ${response.statusText || 'Unknown Error'})`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return data || {};
+};
+
 // Auth API
 export const authAPI = {
   // Register new user
@@ -11,11 +50,7 @@ export const authAPI = {
       },
       body: JSON.stringify(userData),
     });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(Array.isArray(data.error) ? data.error.join(', ') : data.error || 'Failed to sign up');
-    }
-    return data;
+    return parseResponse(response, 'Failed to sign up');
   },
 
   // Login user
@@ -27,11 +62,7 @@ export const authAPI = {
       },
       body: JSON.stringify(credentials),
     });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to login');
-    }
-    return data;
+    return parseResponse(response, 'Failed to login');
   },
 
   // Get current user
@@ -41,11 +72,7 @@ export const authAPI = {
         'Authorization': `Bearer ${token}`,
       },
     });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to get user');
-    }
-    return data;
+    return parseResponse(response, 'Failed to get user');
   },
 };
 
@@ -60,31 +87,19 @@ export const reservationAPI = {
       },
       body: JSON.stringify(reservationData),
     });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to create reservation');
-    }
-    return data;
+    return parseResponse(response, 'Failed to create reservation');
   },
 
   // Get all reservations
   getAll: async () => {
     const response = await fetch(`${API_URL}/reservations`);
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch reservations');
-    }
-    return data;
+    return parseResponse(response, 'Failed to fetch reservations');
   },
 
   // Get single reservation
   getById: async (id) => {
     const response = await fetch(`${API_URL}/reservations/${id}`);
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch reservation');
-    }
-    return data;
+    return parseResponse(response, 'Failed to fetch reservation');
   },
 };
 
@@ -96,21 +111,13 @@ export const menuAPI = {
       ? `${API_URL}/menu` 
       : `${API_URL}/menu?category=${category}`;
     const response = await fetch(url);
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch menu items');
-    }
-    return data;
+    return parseResponse(response, 'Failed to fetch menu items');
   },
 
   // Get single menu item
   getById: async (id) => {
     const response = await fetch(`${API_URL}/menu/${id}`);
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch menu item');
-    }
-    return data;
+    return parseResponse(response, 'Failed to fetch menu item');
   },
 
   // Create menu item
@@ -122,11 +129,7 @@ export const menuAPI = {
       },
       body: JSON.stringify(menuData),
     });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to create menu item');
-    }
-    return data;
+    return parseResponse(response, 'Failed to create menu item');
   },
 };
 
@@ -141,10 +144,6 @@ export const contactAPI = {
       },
       body: JSON.stringify(contactData),
     });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to send message');
-    }
-    return data;
+    return parseResponse(response, 'Failed to send message');
   },
 };

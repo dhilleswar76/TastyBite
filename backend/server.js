@@ -27,11 +27,11 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// Routes
-app.use('/api/auth', authRouter);
-app.use('/api/reservations', reservationsRouter);
-app.use('/api/menu', menuRouter);
-app.use('/api/contact', contactRouter);
+// Routes (support both /api/* and direct routes)
+app.use(['/api/auth', '/auth'], authRouter);
+app.use(['/api/reservations', '/reservations'], reservationsRouter);
+app.use(['/api/menu', '/menu'], menuRouter);
+app.use(['/api/contact', '/contact'], contactRouter);
 
 // Health check routes
 app.get('/api', (req, res) => {
