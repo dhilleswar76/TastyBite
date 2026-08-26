@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 function Header() {
   const [showNav, setShowNav] = useState(false);
@@ -7,6 +8,8 @@ function Header() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { totalItemsCount, setIsCartOpen } = useCart();
 
   useEffect(() => {
     // Check if user is logged in
@@ -34,8 +37,8 @@ function Header() {
     navigate('/');
   };
 
-  // Check if we're on an auth page
   const isAuthPage = location.pathname === '/signup' || location.pathname === '/signin';
+  const isAdminPage = location.pathname === '/admin';
 
   return (
     <header className="header">
@@ -44,7 +47,7 @@ function Header() {
         TastyBite
       </Link>
       <nav className={`nav ${showNav ? 'show' : ''}`}>
-        {!isAuthPage && (
+        {!isAuthPage && !isAdminPage && (
           <>
             <a href="#home" onClick={() => setShowNav(false)}>Home</a>
             <a href="#about" onClick={() => setShowNav(false)}>About</a>
@@ -53,6 +56,10 @@ function Header() {
             <a href="#contact" onClick={() => setShowNav(false)}>Contact</a>
           </>
         )}
+
+        <Link to="/admin" className="admin-nav-link" onClick={() => setShowNav(false)}>
+          ⚙️ Admin
+        </Link>
         
         {isAuthenticated ? (
           <>
@@ -66,9 +73,24 @@ function Header() {
           </>
         )}
       </nav>
-      <button id="navToggle" className="nav-toggle" onClick={toggleNav}>
-        &#9776;
-      </button>
+
+      {/* Cart button in header */}
+      <div className="header-actions-group">
+        <button
+          className="header-cart-btn"
+          onClick={() => setIsCartOpen(true)}
+          aria-label="Open Shopping Cart"
+          title="Open Cart"
+        >
+          <span className="cart-btn-icon">🛒</span>
+          <span className="cart-btn-text">Cart</span>
+          <span className="cart-badge-count">{totalItemsCount}</span>
+        </button>
+
+        <button id="navToggle" className="nav-toggle" onClick={toggleNav} aria-label="Toggle navigation">
+          &#9776;
+        </button>
+      </div>
     </header>
   );
 }

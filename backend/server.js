@@ -5,7 +5,7 @@ import connectDB from './config/db.js';
 import reservationsRouter from './routes/reservations.js';
 import menuRouter from './routes/menu.js';
 import contactRouter from './routes/contact.js';
-import authRouter from './routes/auth.js';
+import ordersRouter from './routes/orders.js';
 
 // Load env vars
 dotenv.config();
@@ -31,6 +31,7 @@ app.use(async (req, res, next) => {
 app.use(['/api/auth', '/auth'], authRouter);
 app.use(['/api/reservations', '/reservations'], reservationsRouter);
 app.use(['/api/menu', '/menu'], menuRouter);
+app.use(['/api/orders', '/orders'], ordersRouter);
 app.use(['/api/contact', '/contact'], contactRouter);
 
 // Health check routes

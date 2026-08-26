@@ -8,10 +8,12 @@ const router = express.Router();
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    const { category } = req.query;
-    const filter = category && category !== 'all' ? { category } : {};
+    const { category, includeUnavailable } = req.query;
+    const filter = {};
+    if (category && category !== 'all') filter.category = category;
+    if (includeUnavailable !== 'true') filter.available = true;
 
-    const menuItems = await MenuItem.find({ ...filter, available: true });
+    const menuItems = await MenuItem.find(filter).sort({ createdAt: -1 });
     res.json({
       success: true,
       count: menuItems.length,

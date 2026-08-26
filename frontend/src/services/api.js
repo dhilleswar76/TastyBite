@@ -103,15 +103,36 @@ export const reservationAPI = {
     const response = await fetch(`${API_URL}/reservations/${id}`);
     return parseResponse(response, 'Failed to fetch reservation');
   },
+
+  // Update reservation status (admin)
+  updateStatus: async (id, status) => {
+    const response = await fetch(`${API_URL}/reservations/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    });
+    return parseResponse(response, 'Failed to update reservation');
+  },
+
+  // Delete reservation (admin)
+  delete: async (id) => {
+    const response = await fetch(`${API_URL}/reservations/${id}`, {
+      method: 'DELETE',
+    });
+    return parseResponse(response, 'Failed to delete reservation');
+  },
 };
 
 // Menu API
 export const menuAPI = {
   // Get all menu items
-  getAll: async (category = 'all') => {
-    const url = category === 'all' 
-      ? `${API_URL}/menu` 
-      : `${API_URL}/menu?category=${category}`;
+  getAll: async (category = 'all', includeUnavailable = false) => {
+    let url = `${API_URL}/menu?`;
+    if (category && category !== 'all') url += `category=${category}&`;
+    if (includeUnavailable) url += `includeUnavailable=true&`;
+    
     const response = await fetch(url);
     return parseResponse(response, 'Failed to fetch menu items');
   },
@@ -122,7 +143,7 @@ export const menuAPI = {
     return parseResponse(response, 'Failed to fetch menu item');
   },
 
-  // Create menu item
+  // Create menu item (admin)
   create: async (menuData) => {
     const response = await fetch(`${API_URL}/menu`, {
       method: 'POST',
@@ -132,6 +153,77 @@ export const menuAPI = {
       body: JSON.stringify(menuData),
     });
     return parseResponse(response, 'Failed to create menu item');
+  },
+
+  // Update menu item (admin)
+  update: async (id, menuData) => {
+    const response = await fetch(`${API_URL}/menu/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(menuData),
+    });
+    return parseResponse(response, 'Failed to update menu item');
+  },
+
+  // Delete menu item (admin)
+  delete: async (id) => {
+    const response = await fetch(`${API_URL}/menu/${id}`, {
+      method: 'DELETE',
+    });
+    return parseResponse(response, 'Failed to delete menu item');
+  },
+};
+
+// Orders API
+export const orderAPI = {
+  // Create new order (checkout)
+  create: async (orderData) => {
+    const response = await fetch(`${API_URL}/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderData),
+    });
+    return parseResponse(response, 'Failed to place order');
+  },
+
+  // Get all orders (admin / history)
+  getAll: async (status = 'all', email = null) => {
+    let url = `${API_URL}/orders?`;
+    if (status && status !== 'all') url += `status=${status}&`;
+    if (email) url += `email=${encodeURIComponent(email)}&`;
+
+    const response = await fetch(url);
+    return parseResponse(response, 'Failed to fetch orders');
+  },
+
+  // Get single order
+  getById: async (id) => {
+    const response = await fetch(`${API_URL}/orders/${id}`);
+    return parseResponse(response, 'Failed to fetch order');
+  },
+
+  // Update order status (admin)
+  updateStatus: async (id, status) => {
+    const response = await fetch(`${API_URL}/orders/${id}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    });
+    return parseResponse(response, 'Failed to update order status');
+  },
+
+  // Delete order (admin)
+  delete: async (id) => {
+    const response = await fetch(`${API_URL}/orders/${id}`, {
+      method: 'DELETE',
+    });
+    return parseResponse(response, 'Failed to delete order');
   },
 };
 
@@ -147,5 +239,11 @@ export const contactAPI = {
       body: JSON.stringify(contactData),
     });
     return parseResponse(response, 'Failed to send message');
+  },
+
+  // Get all contact messages (admin)
+  getAll: async () => {
+    const response = await fetch(`${API_URL}/contact`);
+    return parseResponse(response, 'Failed to fetch messages');
   },
 };
