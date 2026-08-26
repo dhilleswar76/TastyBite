@@ -19,7 +19,7 @@ function Contact() {
               <circle cx="12" cy="9" r="2.5" stroke="white" strokeWidth="2" />
             </svg>
           </div>
-          <h3 id="contact-head">Visit Us</h3>
+          <h3 className="contact-head">Visit Us</h3>
           <p>Ambeerupeta village, Srikakulam dist, Andhra Pradesh 532429</p>
         </div>
         <div className="contact-div">
@@ -29,7 +29,7 @@ function Contact() {
               <path d="M12 7v5l3 2" stroke="white" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
-          <h3 id="contact-head">Opening Hours</h3>
+          <h3 className="contact-head">Opening Hours</h3>
           <p>
             Mon-Fri: 09:00 - 22:00
             <br />
@@ -57,7 +57,7 @@ function Contact() {
               />
             </svg>
           </div>
-          <h3 id="contact-head">Get in Touch</h3>
+          <h3 className="contact-head">Get in Touch</h3>
           <br />
           <a className="link-style" href="tel:+918885636899" aria-label="Call +91 88856 36899">
             &#9742; Click to Call

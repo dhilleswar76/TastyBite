@@ -172,17 +172,20 @@ VITE_API_URL=http://localhost:5000/api
 
 ## 🚀 Deployment
 
-### Frontend
-```bash
-cd frontend
-npm run build
-# Deploy dist/ folder to hosting service
-```
+### Deploying to Vercel (Recommended)
 
-### Backend
-- Set environment variables on hosting platform
-- Deploy backend folder
-- Ensure MongoDB connection string is correct
+1. Push your code to GitHub.
+2. Import the repository in [Vercel](https://vercel.com).
+3. Under **Project Settings > Environment Variables**, add:
+   - `MONGODB_URI`: Your MongoDB connection string (e.g. from MongoDB Atlas)
+   - `JWT_SECRET`: A secret string for JWT authentication
+   - `JWT_EXPIRE`: Token expiration (e.g. `30d`)
+4. Click **Deploy**. Vercel will automatically build the frontend into `frontend/dist` and serve backend API endpoints as serverless functions via `/api`.
+
+### Manual Build
+```bash
+npm run build
+```
 
 ## 📖 Documentation
 

@@ -29,7 +29,7 @@ function Reservations() {
     }
 
     try {
-      const response = await reservationAPI.create(reservationData);
+      await reservationAPI.create(reservationData);
       setFormMessage(`Thanks, ${reservationData.name}! Your reservation for ${reservationData.guests} guest(s) on ${reservationData.date} at ${reservationData.time} has been confirmed.`);
       setMessageColor('green');
       e.target.reset();

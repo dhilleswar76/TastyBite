@@ -436,8 +436,8 @@ body {
 .form input:focus,
 .form textarea:focus {
   outline: none;
-  border: 3px #e86a10;
-  box-shadow: 0 0 0 5px rgb(243, 129, 47), 0 0 8px rgba(249, 115, 22, 0.5);
+  border: 3px solid #e86a10;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.3);
 }
 
 .form-message {
@@ -452,7 +452,7 @@ body {
   margin: 0 auto;
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 #contact{
   background-color: hwb(24 2% 60%);
@@ -475,7 +475,7 @@ body {
   cursor:text;
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
 }
-#contact-head{
+.contact-head{
   font-size: 25px;
 }
 .contact-symbols{

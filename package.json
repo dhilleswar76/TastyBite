@@ -3,16 +3,16 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "postinstall": "npm run install:all",
-    "start": "cd backend && npm start",
-    "frontend": "cd frontend && npm run dev",
-    "backend": "cd backend && npm run dev",
-    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "install:frontend": "cd frontend && npm install",
-    "install:backend": "cd backend && npm install",
-    "install:all": "npm run install:frontend && npm run install:backend",
-    "build": "cd frontend && npm run build"
+    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "build": "npm run build -w frontend",
+    "start": "npm run start -w backend",
+    "frontend": "npm run dev -w frontend",
+    "backend": "npm run dev -w backend"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

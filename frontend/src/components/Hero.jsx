@@ -3,7 +3,7 @@ function Hero() {
     <section id="home" className="hero">
       <div className="hero-content">
         <h1>
-          <bold>Welcome to TastyBite</bold>
+          <strong>Welcome to TastyBite</strong>
         </h1>
         <p>Your favorite place for delicious meals and great ambiance.</p>
         <p>Fresh, local ingredients. Cozy atmosphere. Unforgettable taste.</p>
