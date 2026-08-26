@@ -24,6 +24,21 @@ const orderItemSchema = new mongoose.Schema({
   tag: {
     type: String,
   },
+  spiceLevel: {
+    type: String,
+    enum: ['Mild', 'Medium', 'Hot', 'Extra Hot', 'Default'],
+    default: 'Default',
+  },
+  addOns: [
+    {
+      name: String,
+      price: Number,
+    },
+  ],
+  cookingNotes: {
+    type: String,
+    trim: true,
+  },
 });
 
 const orderSchema = new mongoose.Schema({
@@ -84,9 +99,23 @@ const orderSchema = new mongoose.Schema({
       type: Number,
       default: 0,
     },
+    pointsDiscount: {
+      type: Number,
+      default: 0,
+    },
     totalAmount: {
       type: Number,
       required: true,
+    },
+  },
+  loyalty: {
+    pointsEarned: {
+      type: Number,
+      default: 0,
+    },
+    pointsRedeemed: {
+      type: Number,
+      default: 0,
     },
   },
   payment: {
@@ -104,7 +133,20 @@ const orderSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'],
-    default: 'pending',
+    default: 'confirmed',
+  },
+  estimatedPrepMinutes: {
+    type: Number,
+    default: 30,
+  },
+  timeline: {
+    placedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    preparingAt: Date,
+    readyAt: Date,
+    deliveredAt: Date,
   },
   createdAt: {
     type: Date,
@@ -113,3 +155,4 @@ const orderSchema = new mongoose.Schema({
 });
 
 export default mongoose.model('Order', orderSchema);
+

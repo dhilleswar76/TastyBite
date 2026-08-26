@@ -12,6 +12,10 @@ function CartDrawer() {
     appliedCoupon,
     applyCoupon,
     removeCoupon,
+    loyaltyPoints,
+    pointsRedeemed,
+    pointsDiscount,
+    toggleRedeemPoints,
     totalItemsCount,
     subtotal,
     discount,
@@ -108,9 +112,9 @@ function CartDrawer() {
           ) : (
             <div className="cart-items-list">
               {cartItems.map((item) => {
-                const itemId = item._id || item.id;
+                const itemKey = item.cartKey || item._id || item.id;
                 return (
-                  <div key={itemId} className="cart-item-row">
+                  <div key={itemKey} className="cart-item-row">
                     <img
                       src={item.image || '/pictures-restaurant/restaurant-logo.png'}
                       alt={item.name}
@@ -123,14 +127,31 @@ function CartDrawer() {
                         </span>
                         <h4 className="cart-item-name">{item.name}</h4>
                       </div>
+
+                      {/* Customization Details */}
+                      {(item.spiceLevel !== 'Default' || (item.addOns && item.addOns.length > 0) || item.cookingNotes) && (
+                        <div className="cart-item-custom-tags">
+                          {item.spiceLevel !== 'Default' && (
+                            <span className="cust-pill">🌶️ {item.spiceLevel}</span>
+                          )}
+                          {item.addOns?.map((a, idx) => (
+                            <span key={idx} className="cust-pill add-on">+{a.name} (₹{a.price})</span>
+                          ))}
+                          {item.cookingNotes && (
+                            <span className="cust-pill notes">📝 {item.cookingNotes}</span>
+                          )}
+                        </div>
+                      )}
+
                       <div className="cart-item-price-unit">
                         ₹{item.price} each
                       </div>
+
                       <div className="cart-item-actions">
                         <div className="quantity-stepper">
                           <button
                             className="step-btn minus"
-                            onClick={() => updateQuantity(itemId, item.quantity - 1)}
+                            onClick={() => updateQuantity(itemKey, item.quantity - 1)}
                             aria-label="Decrease quantity"
                           >
                             -
@@ -138,7 +159,7 @@ function CartDrawer() {
                           <span className="step-count">{item.quantity}</span>
                           <button
                             className="step-btn plus"
-                            onClick={() => updateQuantity(itemId, item.quantity + 1)}
+                            onClick={() => updateQuantity(itemKey, item.quantity + 1)}
                             aria-label="Increase quantity"
                           >
                             +
@@ -149,7 +170,7 @@ function CartDrawer() {
                         </span>
                         <button
                           className="cart-delete-btn"
-                          onClick={() => removeFromCart(itemId)}
+                          onClick={() => removeFromCart(itemKey)}
                           title="Remove item"
                         >
                           🗑️
@@ -166,6 +187,25 @@ function CartDrawer() {
         {/* Footer & Checkout */}
         {cartItems.length > 0 && (
           <div className="cart-drawer-footer">
+            {/* TastyPoints Loyalty Redemption */}
+            <div className="loyalty-cart-card">
+              <div className="loyalty-left">
+                <span className="loyalty-icon">🎁</span>
+                <div>
+                  <strong>TastyPoints: {loyaltyPoints} pts</strong>
+                  <p>100 pts = ₹50 instant discount</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className={`redeem-toggle-btn ${pointsRedeemed > 0 ? 'redeemed' : ''}`}
+                onClick={toggleRedeemPoints}
+                disabled={loyaltyPoints < 100}
+              >
+                {pointsRedeemed > 0 ? '✓ Applied (-₹50)' : 'Redeem 100 pts'}
+              </button>
+            </div>
+
             {/* Promo Code Box */}
             <div className="cart-coupon-section">
               {appliedCoupon ? (
@@ -177,7 +217,7 @@ function CartDrawer() {
                 <form onSubmit={handleApplyCoupon} className="coupon-form">
                   <input
                     type="text"
-                    placeholder="Enter Coupon (e.g. TASTY10)"
+                    placeholder="Enter Coupon (e.g. WELCOME20)"
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value)}
                     className="coupon-input"
@@ -196,8 +236,14 @@ function CartDrawer() {
               </div>
               {discount > 0 && (
                 <div className="bill-row discount-row">
-                  <span>Discount ({appliedCoupon?.code})</span>
+                  <span>Promo Discount ({appliedCoupon?.code})</span>
                   <span>-₹{discount}</span>
+                </div>
+              )}
+              {pointsDiscount > 0 && (
+                <div className="bill-row discount-row points-discount">
+                  <span>TastyPoints Reward (100 pts)</span>
+                  <span>-₹{pointsDiscount}</span>
                 </div>
               )}
               <div className="bill-row">
@@ -212,6 +258,9 @@ function CartDrawer() {
               <div className="bill-row bill-grand-total">
                 <span>Grand Total</span>
                 <span>₹{grandTotal}</span>
+              </div>
+              <div className="points-earn-note">
+                🌟 You will earn <strong>+{Math.round(grandTotal / 10)} TastyPoints</strong> on this order!
               </div>
             </div>
 

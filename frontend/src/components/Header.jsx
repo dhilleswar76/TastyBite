@@ -9,13 +9,13 @@ function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { totalItemsCount, setIsCartOpen } = useCart();
+  const { totalItemsCount, setIsCartOpen, loyaltyPoints, openOrderTracker } = useCart();
 
   useEffect(() => {
     // Check if user is logged in
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (token && userData) {
       setIsAuthenticated(true);
       setUser(JSON.parse(userData));
@@ -52,15 +52,29 @@ function Header() {
             <a href="#home" onClick={() => setShowNav(false)}>Home</a>
             <a href="#about" onClick={() => setShowNav(false)}>About</a>
             <a href="#menu" onClick={() => setShowNav(false)}>Menu</a>
+            <a href="#ambiance" onClick={() => setShowNav(false)}>Ambiance</a>
             <a href="#reservations" onClick={() => setShowNav(false)}>Reservations</a>
+            <a href="#events" onClick={() => setShowNav(false)}>Events</a>
+            <a href="#reviews" onClick={() => setShowNav(false)}>Reviews</a>
             <a href="#contact" onClick={() => setShowNav(false)}>Contact</a>
           </>
         )}
 
+        <button
+          className="nav-tracker-btn"
+          onClick={() => {
+            setShowNav(false);
+            openOrderTracker();
+          }}
+          title="Track Live Order"
+        >
+          📍 Track Order
+        </button>
+
         <Link to="/admin" className="admin-nav-link" onClick={() => setShowNav(false)}>
           ⚙️ Admin
         </Link>
-        
+
         {isAuthenticated ? (
           <>
             <span className="user-name">Hello, {user?.name}</span>
@@ -74,8 +88,15 @@ function Header() {
         )}
       </nav>
 
-      {/* Cart button in header */}
+      {/* Header Actions */}
       <div className="header-actions-group">
+        {/* Loyalty Points Pill */}
+        <div className="header-points-pill" title="Your TastyPoints Balance">
+          <span className="pts-icon">🎁</span>
+          <span className="pts-val">{loyaltyPoints} pts</span>
+        </div>
+
+        {/* Cart Button */}
         <button
           className="header-cart-btn"
           onClick={() => setIsCartOpen(true)}

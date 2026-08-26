@@ -25,7 +25,34 @@ export const CartProvider = ({ children }) => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Sync to localStorage
+  // Modals state
+  const [customizingItem, setCustomizingItem] = useState(null);
+  const [nutritionItem, setNutritionItem] = useState(null);
+  const [trackingOrderNumber, setTrackingOrderNumber] = useState(null);
+  const [isTrackerOpen, setIsTrackerOpen] = useState(false);
+
+  // Table QR detection
+  const [tableNumber, setTableNumber] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('table') || '';
+    } catch {
+      return '';
+    }
+  });
+
+  // Loyalty points (100 points = ₹50 discount)
+  const [loyaltyPoints, setLoyaltyPoints] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tastybite_points');
+      return saved !== null ? Number(saved) : 200; // 200 welcome points = ₹100
+    } catch {
+      return 200;
+    }
+  });
+  const [pointsRedeemed, setPointsRedeemed] = useState(0);
+
+  // Sync cart to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('tastybite_cart', JSON.stringify(cartItems));
@@ -34,35 +61,62 @@ export const CartProvider = ({ children }) => {
     }
   }, [cartItems]);
 
+  // Sync loyalty points to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('tastybite_points', loyaltyPoints.toString());
+    } catch (e) {
+      console.error('Failed to save loyalty points', e);
+    }
+  }, [loyaltyPoints]);
+
   const showToast = (message) => {
     setToastMessage(message);
     setTimeout(() => {
       setToastMessage(null);
-    }, 3000);
+    }, 3200);
   };
 
-  const getItemId = (item) => item._id || item.id;
+  const generateCartKey = (item, spiceLevel = 'Default', addOns = [], notes = '') => {
+    const baseId = item._id || item.id;
+    const addOnKey = (addOns || []).map((a) => a.name).sort().join('-');
+    return `${baseId}_${spiceLevel}_${addOnKey}_${notes.trim()}`;
+  };
 
-  const addToCart = (item, quantity = 1) => {
-    const id = getItemId(item);
+  const addToCart = (item, quantity = 1, customizations = {}) => {
+    const spiceLevel = customizations.spiceLevel || 'Default';
+    const addOns = customizations.addOns || [];
+    const cookingNotes = customizations.cookingNotes || '';
+
+    // Calculate item total price with add-ons
+    const addOnsCost = addOns.reduce((acc, a) => acc + Number(a.price || 0), 0);
+    const effectiveUnitPrice = Number(item.price) + addOnsCost;
+
+    const cartKey = generateCartKey(item, spiceLevel, addOns, cookingNotes);
+
     setCartItems((prevItems) => {
-      const existing = prevItems.find((i) => getItemId(i) === id);
+      const existing = prevItems.find((i) => i.cartKey === cartKey);
       if (existing) {
         return prevItems.map((i) =>
-          getItemId(i) === id ? { ...i, quantity: i.quantity + quantity } : i
+          i.cartKey === cartKey ? { ...i, quantity: i.quantity + quantity } : i
         );
       } else {
         return [
           ...prevItems,
           {
-            id,
+            cartKey,
+            id: item._id || item.id,
             _id: item._id,
             name: item.name,
-            price: Number(item.price),
+            basePrice: Number(item.price),
+            price: effectiveUnitPrice,
             image: item.image,
             tag: item.tag || '',
             category: item.category,
             quantity: Math.max(1, quantity),
+            spiceLevel,
+            addOns,
+            cookingNotes,
           },
         ];
       }
@@ -71,23 +125,24 @@ export const CartProvider = ({ children }) => {
     showToast(`Added "${item.name}" to cart! 🛒`);
   };
 
-  const removeFromCart = (itemId) => {
-    setCartItems((prev) => prev.filter((i) => getItemId(i) !== itemId));
+  const removeFromCart = (cartKey) => {
+    setCartItems((prev) => prev.filter((i) => (i.cartKey || i._id || i.id) !== cartKey));
   };
 
-  const updateQuantity = (itemId, newQuantity) => {
+  const updateQuantity = (cartKey, newQuantity) => {
     if (newQuantity <= 0) {
-      removeFromCart(itemId);
+      removeFromCart(cartKey);
       return;
     }
     setCartItems((prev) =>
-      prev.map((i) => (getItemId(i) === itemId ? { ...i, quantity: newQuantity } : i))
+      prev.map((i) => ((i.cartKey || i._id || i.id) === cartKey ? { ...i, quantity: newQuantity } : i))
     );
   };
 
   const clearCart = () => {
     setCartItems([]);
     setAppliedCoupon(null);
+    setPointsRedeemed(0);
     localStorage.removeItem('tastybite_cart');
   };
 
@@ -97,22 +152,37 @@ export const CartProvider = ({ children }) => {
       setAppliedCoupon({ code: 'TASTY10', type: 'percent', value: 10, label: '10% OFF' });
       showToast('Coupon "TASTY10" applied! 10% discount added 🎉');
       return { success: true, message: '10% discount applied!' };
-    } else if (cleanCode === 'TASTY20') {
-      setAppliedCoupon({ code: 'TASTY20', type: 'percent', value: 20, label: '20% OFF' });
-      showToast('Coupon "TASTY20" applied! 20% discount added 🎉');
+    } else if (cleanCode === 'TASTY20' || cleanCode === 'WELCOME20') {
+      setAppliedCoupon({ code: cleanCode, type: 'percent', value: 20, label: '20% OFF' });
+      showToast(`Coupon "${cleanCode}" applied! 20% discount added 🎉`);
       return { success: true, message: '20% discount applied!' };
-    } else if (cleanCode === 'FREE50') {
-      setAppliedCoupon({ code: 'FREE50', type: 'flat', value: 50, label: '₹50 OFF' });
-      showToast('Coupon "FREE50" applied! ₹50 discount added 🎉');
+    } else if (cleanCode === 'FREE50' || cleanCode === 'WEEKEND50') {
+      setAppliedCoupon({ code: cleanCode, type: 'flat', value: 50, label: '₹50 OFF' });
+      showToast(`Coupon "${cleanCode}" applied! ₹50 discount added 🎉`);
       return { success: true, message: '₹50 discount applied!' };
     } else {
-      return { success: false, message: 'Invalid promo code. Try "TASTY10" or "TASTY20".' };
+      return { success: false, message: 'Invalid promo code. Try "WELCOME20", "TASTY10", or "WEEKEND50".' };
     }
   };
 
   const removeCoupon = () => {
     setAppliedCoupon(null);
     showToast('Coupon removed');
+  };
+
+  // Loyalty Points redemption
+  const toggleRedeemPoints = () => {
+    if (pointsRedeemed > 0) {
+      setPointsRedeemed(0);
+      showToast('TastyPoints removed from checkout');
+    } else {
+      if (loyaltyPoints >= 100) {
+        setPointsRedeemed(100);
+        showToast('Redeemed 100 TastyPoints for ₹50 OFF! 🎁');
+      } else {
+        showToast('You need at least 100 TastyPoints to redeem');
+      }
+    }
   };
 
   // Calculations
@@ -128,10 +198,26 @@ export const CartProvider = ({ children }) => {
     }
   }
 
-  const taxableAmount = Math.max(0, subtotal - discount);
+  const pointsDiscount = pointsRedeemed > 0 ? 50 : 0;
+  const taxableAmount = Math.max(0, subtotal - discount - pointsDiscount);
   const taxAmount = Math.round(taxableAmount * 0.05); // 5% GST
   const deliveryFee = subtotal > 0 && subtotal < 499 ? 40 : 0;
   const grandTotal = Math.max(0, taxableAmount + taxAmount + deliveryFee);
+
+  // Modal Triggers
+  const openCustomizeModal = (item) => setCustomizingItem(item);
+  const closeCustomizeModal = () => setCustomizingItem(null);
+
+  const openNutritionModal = (item) => setNutritionItem(item);
+  const closeNutritionModal = () => setNutritionItem(null);
+
+  const openOrderTracker = (orderNum = null) => {
+    if (orderNum) setTrackingOrderNumber(orderNum);
+    setIsTrackerOpen(true);
+  };
+  const closeOrderTracker = () => {
+    setIsTrackerOpen(false);
+  };
 
   return (
     <CartContext.Provider
@@ -143,18 +229,36 @@ export const CartProvider = ({ children }) => {
         setIsCheckoutOpen,
         appliedCoupon,
         toastMessage,
+        customizingItem,
+        nutritionItem,
+        trackingOrderNumber,
+        isTrackerOpen,
+        tableNumber,
+        setTableNumber,
+        loyaltyPoints,
+        setLoyaltyPoints,
+        pointsRedeemed,
+        pointsDiscount,
+        toggleRedeemPoints,
         addToCart,
         removeFromCart,
         updateQuantity,
         clearCart,
         applyCoupon,
         removeCoupon,
+        openCustomizeModal,
+        closeCustomizeModal,
+        openNutritionModal,
+        closeNutritionModal,
+        openOrderTracker,
+        closeOrderTracker,
         totalItemsCount,
         subtotal,
         discount,
         taxAmount,
         deliveryFee,
         grandTotal,
+        showToast,
       }}
     >
       {children}

@@ -10,19 +10,24 @@ function CheckoutModal() {
     clearCart,
     subtotal,
     discount,
+    pointsDiscount,
+    pointsRedeemed,
     taxAmount,
     deliveryFee,
     grandTotal,
-    appliedCoupon,
+    tableNumber,
+    loyaltyPoints,
+    setLoyaltyPoints,
+    openOrderTracker,
   } = useCart();
 
-  const [orderType, setOrderType] = useState('delivery');
+  const [orderType, setOrderType] = useState(tableNumber ? 'dine-in' : 'delivery');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     address: '',
-    tableNumber: '',
+    tableNumber: tableNumber || '',
     notes: '',
     paymentMethod: 'cod',
   });
@@ -30,6 +35,14 @@ function CheckoutModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [placedOrder, setPlacedOrder] = useState(null);
+
+  // Sync tableNumber from context if URL scanned
+  useEffect(() => {
+    if (tableNumber) {
+      setOrderType('dine-in');
+      setFormData((prev) => ({ ...prev, tableNumber }));
+    }
+  }, [tableNumber]);
 
   // Pre-fill user data if logged in
   useEffect(() => {
@@ -39,8 +52,8 @@ function CheckoutModal() {
         const u = JSON.parse(userData);
         setFormData((prev) => ({
           ...prev,
-          name: u.name || '',
-          email: u.email || '',
+          name: u.name || prev.name,
+          email: u.email || prev.email,
         }));
       }
     } catch {
@@ -87,6 +100,8 @@ function CheckoutModal() {
 
     setIsSubmitting(true);
 
+    const pointsEarned = Math.round(grandTotal / 10);
+
     try {
       const orderPayload = {
         customer: {
@@ -105,23 +120,35 @@ function CheckoutModal() {
           quantity: item.quantity,
           image: item.image,
           tag: item.tag,
+          spiceLevel: item.spiceLevel || 'Default',
+          addOns: item.addOns || [],
+          cookingNotes: item.cookingNotes || '',
         })),
         pricing: {
           subtotal,
           tax: taxAmount,
           deliveryFee: orderType === 'delivery' ? deliveryFee : 0,
           discount,
+          pointsDiscount,
           totalAmount: grandTotal,
+        },
+        loyalty: {
+          pointsEarned,
+          pointsRedeemed,
         },
         payment: {
           method: formData.paymentMethod,
-          status: 'pending',
+          status: formData.paymentMethod === 'cod' ? 'pending' : 'paid',
         },
       };
 
       const response = await orderAPI.create(orderPayload);
       const createdOrder = response.data || response;
       setPlacedOrder(createdOrder);
+
+      // Update loyalty balance
+      setLoyaltyPoints((prev) => Math.max(0, prev - pointsRedeemed + pointsEarned));
+
       clearCart();
     } catch (err) {
       console.error('Order creation failed:', err);
@@ -174,13 +201,20 @@ function CheckoutModal() {
                 <span>Status</span>
                 <span className="status-badge status-confirmed">Confirmed 👨‍🍳</span>
               </div>
+              <div className="receipt-row loyalty-earned-highlight">
+                <span>TastyPoints Earned</span>
+                <strong className="points-plus">+{placedOrder.loyalty?.pointsEarned || Math.round(grandTotal / 10)} pts 🎁</strong>
+              </div>
               <div className="receipt-divider"></div>
               <div className="receipt-items-mini">
                 <h4>Ordered Dishes ({placedOrder.items?.length}):</h4>
                 <ul>
                   {placedOrder.items?.map((item, idx) => (
                     <li key={idx}>
-                      <span>{item.quantity}x {item.name}</span>
+                      <span>
+                        {item.quantity}x {item.name}
+                        {item.spiceLevel && item.spiceLevel !== 'Default' && ` (${item.spiceLevel})`}
+                      </span>
                       <span>₹{item.price * item.quantity}</span>
                     </li>
                   ))}
@@ -189,8 +223,17 @@ function CheckoutModal() {
             </div>
 
             <div className="order-success-actions">
+              <button
+                className="track-live-btn"
+                onClick={() => {
+                  handleClose();
+                  openOrderTracker(placedOrder.orderNumber);
+                }}
+              >
+                📍 Track Order Live
+              </button>
               <button className="done-btn" onClick={handleClose}>
-                Back to TastyBite
+                Back to Menu
               </button>
             </div>
           </div>
@@ -200,6 +243,13 @@ function CheckoutModal() {
             <h2 className="checkout-title">
               <span>🍽️</span> Complete Your Order
             </h2>
+
+            {/* Table QR banner if scanned */}
+            {tableNumber && (
+              <div className="qr-scanned-banner">
+                📱 Scanned Table QR Code &bull; <strong>Ordering directly to Table #{tableNumber}</strong>
+              </div>
+            )}
 
             {/* Order Type Tabs */}
             <div className="order-type-tabs">
@@ -329,7 +379,7 @@ function CheckoutModal() {
                       checked={formData.paymentMethod === 'upi'}
                       onChange={handleChange}
                     />
-                    <span>📱 UPI / Google Pay / PhonePe</span>
+                    <span>📱 UPI / Google Pay / PhonePe (Instant)</span>
                   </label>
                   <label className={`payment-radio-label ${formData.paymentMethod === 'card' ? 'selected' : ''}`}>
                     <input

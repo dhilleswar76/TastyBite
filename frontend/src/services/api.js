@@ -247,3 +247,74 @@ export const contactAPI = {
     return parseResponse(response, 'Failed to fetch messages');
   },
 };
+
+// Reviews API
+export const reviewAPI = {
+  // Get all reviews
+  getAll: async () => {
+    const response = await fetch(`${API_URL}/reviews`);
+    return parseResponse(response, 'Failed to fetch reviews');
+  },
+
+  // Create review
+  create: async (reviewData) => {
+    const response = await fetch(`${API_URL}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(reviewData),
+    });
+    return parseResponse(response, 'Failed to submit review');
+  },
+
+  // Delete review (admin)
+  delete: async (id) => {
+    const response = await fetch(`${API_URL}/reviews/${id}`, {
+      method: 'DELETE',
+    });
+    return parseResponse(response, 'Failed to delete review');
+  },
+};
+
+// Events & Catering API
+export const eventAPI = {
+  // Submit event inquiry
+  create: async (eventData) => {
+    const response = await fetch(`${API_URL}/events`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(eventData),
+    });
+    return parseResponse(response, 'Failed to submit event inquiry');
+  },
+
+  // Get all event inquiries (admin)
+  getAll: async () => {
+    const response = await fetch(`${API_URL}/events`);
+    return parseResponse(response, 'Failed to fetch event inquiries');
+  },
+
+  // Update status (admin)
+  updateStatus: async (id, status) => {
+    const response = await fetch(`${API_URL}/events/${id}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    });
+    return parseResponse(response, 'Failed to update event status');
+  },
+
+  // Delete event inquiry (admin)
+  delete: async (id) => {
+    const response = await fetch(`${API_URL}/events/${id}`, {
+      method: 'DELETE',
+    });
+    return parseResponse(response, 'Failed to delete event inquiry');
+  },
+};
+

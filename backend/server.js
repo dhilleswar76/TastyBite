@@ -2,10 +2,13 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
+import authRouter from './routes/auth.js';
 import reservationsRouter from './routes/reservations.js';
 import menuRouter from './routes/menu.js';
 import contactRouter from './routes/contact.js';
 import ordersRouter from './routes/orders.js';
+import reviewsRouter from './routes/reviews.js';
+import eventsRouter from './routes/events.js';
 
 // Load env vars
 dotenv.config();
@@ -32,6 +35,8 @@ app.use(['/api/auth', '/auth'], authRouter);
 app.use(['/api/reservations', '/reservations'], reservationsRouter);
 app.use(['/api/menu', '/menu'], menuRouter);
 app.use(['/api/orders', '/orders'], ordersRouter);
+app.use(['/api/reviews', '/reviews'], reviewsRouter);
+app.use(['/api/events', '/events'], eventsRouter);
 app.use(['/api/contact', '/contact'], contactRouter);
 
 // Health check routes

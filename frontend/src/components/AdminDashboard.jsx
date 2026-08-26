@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { orderAPI, reservationAPI, menuAPI, contactAPI } from '../services/api';
+import { orderAPI, reservationAPI, menuAPI, contactAPI, eventAPI, reviewAPI } from '../services/api';
 import { menuItems as fallbackMenu } from '../data/menuData';
 
 function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'reservations', 'menu', 'contacts'
+  const [activeTab, setActiveTab] = useState('kds'); // 'kds', 'orders', 'reservations', 'menu', 'events', 'analytics', 'qr'
   const [loading, setLoading] = useState(true);
 
   // Data states
@@ -12,12 +12,17 @@ function AdminDashboard() {
   const [reservations, setReservations] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [contacts, setContacts] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
   // Search & filter states
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
   const [reservationSearch, setReservationSearch] = useState('');
   const [menuSearch, setMenuSearch] = useState('');
   const [menuCatFilter, setMenuCatFilter] = useState('all');
+
+  // Selected Table for QR Generator
+  const [selectedTableForQR, setSelectedTableForQR] = useState(1);
 
   // Menu Modal State (Add / Edit)
   const [showMenuModal, setShowMenuModal] = useState(false);
@@ -30,6 +35,12 @@ function AdminDashboard() {
     tag: 'Veg',
     image: '/pictures-restaurant/Paneer-Tikka.png',
     available: true,
+    spiceLevel: 2,
+    isChefSpecial: false,
+    calories: 340,
+    protein: '16g',
+    carbs: '28g',
+    fats: '14g',
   });
   const [actionFeedback, setActionFeedback] = useState(null);
 
@@ -53,11 +64,13 @@ function AdminDashboard() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [ordersRes, resRes, menuRes, contactsRes] = await Promise.allSettled([
+      const [ordersRes, resRes, menuRes, contactsRes, eventsRes, reviewsRes] = await Promise.allSettled([
         orderAPI.getAll('all'),
         reservationAPI.getAll(),
         menuAPI.getAll('all', true),
         contactAPI.getAll(),
+        eventAPI.getAll(),
+        reviewAPI.getAll(),
       ]);
 
       if (ordersRes.status === 'fulfilled' && ordersRes.value?.data) {
@@ -73,6 +86,12 @@ function AdminDashboard() {
       }
       if (contactsRes.status === 'fulfilled' && contactsRes.value?.data) {
         setContacts(contactsRes.value.data);
+      }
+      if (eventsRes.status === 'fulfilled' && eventsRes.value?.data) {
+        setEvents(eventsRes.value.data);
+      }
+      if (reviewsRes.status === 'fulfilled' && reviewsRes.value?.data) {
+        setReviews(reviewsRes.value.data);
       }
     } catch (e) {
       console.error('Error fetching admin data:', e);
@@ -133,6 +152,19 @@ function AdminDashboard() {
     }
   };
 
+  // --- EVENT INQUIRY HANDLERS ---
+  const handleUpdateEventStatus = async (eventId, status) => {
+    try {
+      await eventAPI.updateStatus(eventId, status);
+      setEvents((prev) =>
+        prev.map((ev) => (ev._id === eventId ? { ...ev, status } : ev))
+      );
+      showNotification(`Event inquiry marked as ${status}!`);
+    } catch (err) {
+      showNotification(err.message || 'Failed to update event status', 'error');
+    }
+  };
+
   // --- MENU ITEM HANDLERS ---
   const handleOpenAddMenuModal = () => {
     setEditingMenuItem(null);
@@ -144,6 +176,12 @@ function AdminDashboard() {
       tag: 'Veg',
       image: '/pictures-restaurant/Paneer-Tikka.png',
       available: true,
+      spiceLevel: 2,
+      isChefSpecial: false,
+      calories: 340,
+      protein: '16g',
+      carbs: '28g',
+      fats: '14g',
     });
     setShowMenuModal(true);
   };
@@ -158,6 +196,12 @@ function AdminDashboard() {
       tag: item.tag || 'Veg',
       image: item.image || '/pictures-restaurant/Paneer-Tikka.png',
       available: item.available !== false,
+      spiceLevel: item.spiceLevel || 2,
+      isChefSpecial: item.isChefSpecial || false,
+      calories: item.nutrition?.calories || 340,
+      protein: item.nutrition?.protein || '16g',
+      carbs: item.nutrition?.carbs || '28g',
+      fats: item.nutrition?.fats || '14g',
     });
     setShowMenuModal(true);
   };
@@ -196,8 +240,21 @@ function AdminDashboard() {
     e.preventDefault();
     try {
       const payload = {
-        ...menuFormData,
+        name: menuFormData.name,
+        description: menuFormData.description,
         price: Number(menuFormData.price),
+        category: menuFormData.category,
+        tag: menuFormData.tag,
+        image: menuFormData.image,
+        available: menuFormData.available,
+        spiceLevel: Number(menuFormData.spiceLevel),
+        isChefSpecial: Boolean(menuFormData.isChefSpecial),
+        nutrition: {
+          calories: Number(menuFormData.calories),
+          protein: menuFormData.protein,
+          carbs: menuFormData.carbs,
+          fats: menuFormData.fats,
+        },
       };
 
       if (editingMenuItem && editingMenuItem._id) {
@@ -231,7 +288,8 @@ function AdminDashboard() {
     return (
       r.name?.toLowerCase().includes(q) ||
       r.email?.toLowerCase().includes(q) ||
-      r.time?.toLowerCase().includes(q)
+      r.time?.toLowerCase().includes(q) ||
+      r.seatingZone?.toLowerCase().includes(q)
     );
   });
 
@@ -244,10 +302,23 @@ function AdminDashboard() {
     return matchesCat && matchesSearch;
   });
 
-  // Calculate quick stats
+  // Calculate quick stats & analytics
   const totalRevenue = orders.reduce((acc, o) => acc + (o.pricing?.totalAmount || 0), 0);
-  const pendingOrdersCount = orders.filter((o) => o.status === 'pending' || o.status === 'confirmed' || o.status === 'preparing').length;
+  const pendingOrdersCount = orders.filter(
+    (o) => o.status === 'pending' || o.status === 'confirmed' || o.status === 'preparing'
+  ).length;
   const activeReservationsCount = reservations.filter((r) => r.status !== 'cancelled').length;
+
+  // KDS Columns
+  const kdsNew = orders.filter((o) => o.status === 'pending' || o.status === 'confirmed');
+  const kdsCooking = orders.filter((o) => o.status === 'preparing');
+  const kdsReady = orders.filter((o) => o.status === 'ready');
+  const kdsDelivered = orders.filter((o) => o.status === 'delivered');
+
+  // QR URL
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+  const tableQRUrl = `${currentOrigin}/?table=${selectedTableForQR}`;
+  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(tableQRUrl)}`;
 
   return (
     <div className="admin-page-container">
@@ -256,17 +327,17 @@ function AdminDashboard() {
         <div className="admin-header-brand">
           <Link to="/" className="admin-logo">
             <img src="/pictures-restaurant/restaurant-logo.png" alt="TastyBite" />
-            <span>TastyBite <strong>Admin</strong></span>
+            <span>TastyBite <strong>Operations Control</strong></span>
           </Link>
-          <span className="admin-badge-live">Live Operations</span>
+          <span className="admin-badge-live">Live Kitchen &amp; Floor</span>
         </div>
 
         <div className="admin-header-actions">
           <button className="admin-refresh-btn" onClick={loadAllData} title="Refresh data">
-            ↻ Refresh Data
+            ↻ Refresh All
           </button>
           <Link to="/" className="admin-exit-btn">
-            &larr; Back to Restaurant
+            &larr; Return to Guest Site
           </Link>
         </div>
       </header>
@@ -289,26 +360,26 @@ function AdminDashboard() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon orders">🛍️</div>
+          <div className="stat-icon orders">👨‍🍳</div>
           <div className="stat-info">
-            <span className="stat-label">Active Orders</span>
-            <h3 className="stat-val">{pendingOrdersCount} <small>/ {orders.length} total</small></h3>
+            <span className="stat-label">Active Kitchen Orders</span>
+            <h3 className="stat-val">{pendingOrdersCount} <small>active</small></h3>
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-icon reservations">📅</div>
           <div className="stat-info">
-            <span className="stat-label">Table Bookings</span>
-            <h3 className="stat-val">{activeReservationsCount} <small>/ {reservations.length} total</small></h3>
+            <span className="stat-label">Table Reservations</span>
+            <h3 className="stat-val">{activeReservationsCount} <small>booked</small></h3>
           </div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon menu">🍕</div>
+          <div className="stat-icon menu">🍾</div>
           <div className="stat-info">
-            <span className="stat-label">Menu Dishes</span>
-            <h3 className="stat-val">{menuItems.length}</h3>
+            <span className="stat-label">Party &amp; Events</span>
+            <h3 className="stat-val">{events.length} <small>inquiries</small></h3>
           </div>
         </div>
       </div>
@@ -316,28 +387,46 @@ function AdminDashboard() {
       {/* Admin Navigation Tabs */}
       <div className="admin-tabs-bar">
         <button
+          className={`admin-tab-btn ${activeTab === 'kds' ? 'active' : ''}`}
+          onClick={() => setActiveTab('kds')}
+        >
+          👨‍🍳 Kitchen KDS ({kdsNew.length + kdsCooking.length})
+        </button>
+        <button
           className={`admin-tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
           onClick={() => setActiveTab('orders')}
         >
-          🛍️ Live Orders ({orders.length})
+          🛍️ All Orders ({orders.length})
         </button>
         <button
           className={`admin-tab-btn ${activeTab === 'reservations' ? 'active' : ''}`}
           onClick={() => setActiveTab('reservations')}
         >
-          📅 Reservations ({reservations.length})
+          📅 Table Bookings ({reservations.length})
         </button>
         <button
           className={`admin-tab-btn ${activeTab === 'menu' ? 'active' : ''}`}
           onClick={() => setActiveTab('menu')}
         >
-          🍕 Menu Management ({menuItems.length})
+          🍕 Menu Catalog ({menuItems.length})
         </button>
         <button
-          className={`admin-tab-btn ${activeTab === 'contacts' ? 'active' : ''}`}
-          onClick={() => setActiveTab('contacts')}
+          className={`admin-tab-btn ${activeTab === 'qr' ? 'active' : ''}`}
+          onClick={() => setActiveTab('qr')}
         >
-          ✉️ Inquiries ({contacts.length})
+          📱 Table QR Generator
+        </button>
+        <button
+          className={`admin-tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          📊 Sales &amp; Trends
+        </button>
+        <button
+          className={`admin-tab-btn ${activeTab === 'events' ? 'active' : ''}`}
+          onClick={() => setActiveTab('events')}
+        >
+          🎉 Event Inquiries ({events.length})
         </button>
       </div>
 
@@ -346,16 +435,301 @@ function AdminDashboard() {
         {loading ? (
           <div className="admin-loading-state">
             <div className="loading-spinner"></div>
-            <p>Loading restaurant dashboard data...</p>
+            <p>Loading restaurant operations data...</p>
           </div>
         ) : (
           <>
-            {/* --- TAB 1: LIVE ORDERS --- */}
+            {/* --- TAB 1: KITCHEN DISPLAY SYSTEM (KDS) --- */}
+            {activeTab === 'kds' && (
+              <div className="kds-dashboard-board">
+                <div className="kds-header-bar">
+                  <div>
+                    <h3>👨‍🍳 Live Kitchen Order Board (KDS)</h3>
+                    <p>Real-time order tickets for executive chefs, tandoor masters, and packers.</p>
+                  </div>
+                  <span className="live-clock-pill">🔴 Kitchen Live Stream</span>
+                </div>
+
+                <div className="kds-columns-grid">
+                  {/* Column 1: New / Confirmed */}
+                  <div className="kds-column col-new">
+                    <div className="kds-col-header">
+                      <h4>📋 New Orders ({kdsNew.length})</h4>
+                    </div>
+                    <div className="kds-cards-container">
+                      {kdsNew.map((order) => (
+                        <div key={order._id} className="kds-ticket-card">
+                          <div className="ticket-top">
+                            <strong className="ticket-code">{order.orderNumber}</strong>
+                            <span className="ticket-type-badge">
+                              {order.customer?.orderType === 'dine-in' ? `🍽️ Table #${order.customer?.tableNumber}` : '🛵 Delivery'}
+                            </span>
+                          </div>
+                          <div className="ticket-items-body">
+                            {order.items?.map((it, idx) => (
+                              <div key={idx} className="ticket-item-line">
+                                <strong>{it.quantity}x {it.name}</strong>
+                                {it.spiceLevel && it.spiceLevel !== 'Default' && (
+                                  <span className="kds-spice-tag">🌶️ {it.spiceLevel}</span>
+                                )}
+                                {it.addOns && it.addOns.length > 0 && (
+                                  <div className="kds-addon-txt">+ {it.addOns.map((a) => a.name).join(', ')}</div>
+                                )}
+                                {it.cookingNotes && (
+                                  <div className="kds-notes-txt">📝 {it.cookingNotes}</div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="ticket-footer-action">
+                            <button
+                              className="kds-advance-btn start-cook"
+                              onClick={() => handleUpdateOrderStatus(order._id, 'preparing')}
+                            >
+                              🔥 Start Cooking &rarr;
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Column 2: In Kitchen / Cooking */}
+                  <div className="kds-column col-cooking">
+                    <div className="kds-col-header">
+                      <h4>👨‍🍳 In Kitchen ({kdsCooking.length})</h4>
+                    </div>
+                    <div className="kds-cards-container">
+                      {kdsCooking.map((order) => (
+                        <div key={order._id} className="kds-ticket-card cooking">
+                          <div className="ticket-top">
+                            <strong className="ticket-code">{order.orderNumber}</strong>
+                            <span className="ticket-type-badge">
+                              {order.customer?.orderType === 'dine-in' ? `🍽️ Table #${order.customer?.tableNumber}` : '🛵 Delivery'}
+                            </span>
+                          </div>
+                          <div className="ticket-items-body">
+                            {order.items?.map((it, idx) => (
+                              <div key={idx} className="ticket-item-line">
+                                <strong>{it.quantity}x {it.name}</strong>
+                                {it.spiceLevel && it.spiceLevel !== 'Default' && (
+                                  <span className="kds-spice-tag">🌶️ {it.spiceLevel}</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="ticket-footer-action">
+                            <button
+                              className="kds-advance-btn mark-ready"
+                              onClick={() => handleUpdateOrderStatus(order._id, 'ready')}
+                            >
+                              📦 Mark Ready / Dispatch &rarr;
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Column 3: Ready for Pickup / Out for Delivery */}
+                  <div className="kds-column col-ready">
+                    <div className="kds-col-header">
+                      <h4>🛵 Ready / Out ({kdsReady.length})</h4>
+                    </div>
+                    <div className="kds-cards-container">
+                      {kdsReady.map((order) => (
+                        <div key={order._id} className="kds-ticket-card ready">
+                          <div className="ticket-top">
+                            <strong className="ticket-code">{order.orderNumber}</strong>
+                            <span>{order.customer?.name} (📞 {order.customer?.phone})</span>
+                          </div>
+                          <div className="ticket-items-body">
+                            <p>{order.items?.length} items packed and ready.</p>
+                          </div>
+                          <div className="ticket-footer-action">
+                            <button
+                              className="kds-advance-btn complete-order"
+                              onClick={() => handleUpdateOrderStatus(order._id, 'delivered')}
+                            >
+                              ✅ Complete &amp; Served
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Column 4: Delivered / Completed */}
+                  <div className="kds-column col-done">
+                    <div className="kds-col-header">
+                      <h4>✅ Completed Today ({kdsDelivered.length})</h4>
+                    </div>
+                    <div className="kds-cards-container">
+                      {kdsDelivered.slice(0, 5).map((order) => (
+                        <div key={order._id} className="kds-ticket-card done">
+                          <div className="ticket-top">
+                            <strong>{order.orderNumber}</strong>
+                            <span>₹{order.pricing?.totalAmount}</span>
+                          </div>
+                          <span className="done-status-pill">Completed</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* --- TAB 2: TABLE QR GENERATOR --- */}
+            {activeTab === 'qr' && (
+              <div className="admin-tab-panel">
+                <div className="panel-header-toolbar">
+                  <div className="panel-title-block">
+                    <h3>📱 Table QR Code Ordering Station</h3>
+                    <p>Print QR code table placards. Guests scan with their smartphones to order directly to their table number.</p>
+                  </div>
+                </div>
+
+                <div className="qr-generator-layout">
+                  <div className="qr-controls-card">
+                    <label>Select Table Number to Generate:</label>
+                    <div className="tables-btn-grid">
+                      {Array.from({ length: 20 }, (_, i) => i + 1).map((tbl) => (
+                        <button
+                          key={tbl}
+                          type="button"
+                          className={`table-select-btn ${selectedTableForQR === tbl ? 'selected' : ''}`}
+                          onClick={() => setSelectedTableForQR(tbl)}
+                        >
+                          Table {tbl}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="qr-link-preview-box">
+                      <label>Target Guest Order URL:</label>
+                      <input type="text" readOnly value={tableQRUrl} className="qr-url-input" />
+                    </div>
+                  </div>
+
+                  <div className="qr-preview-card" id="printable-qr">
+                    <div className="qr-placard-inner">
+                      <img src="/pictures-restaurant/restaurant-logo.png" alt="TastyBite" className="qr-brand-logo" />
+                      <h3>TastyBite Fine Dining</h3>
+                      <div className="table-badge-big">TABLE #{selectedTableForQR}</div>
+                      <img src={qrImageSrc} alt={`Table ${selectedTableForQR} QR Code`} className="qr-code-img" />
+                      <p className="qr-scan-instr">📷 Scan with your camera to browse menu &amp; order dishes directly to your table.</p>
+                      <button className="print-qr-btn" onClick={() => window.print()}>
+                        🖨️ Print QR Table Standee
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* --- TAB 3: SALES & TRENDS ANALYTICS --- */}
+            {activeTab === 'analytics' && (
+              <div className="admin-tab-panel">
+                <div className="panel-header-toolbar">
+                  <div className="panel-title-block">
+                    <h3>📊 Sales &amp; Dining Trends Analytics</h3>
+                    <p>Revenue velocity, peak ordering hours, and best-selling culinary dishes.</p>
+                  </div>
+                </div>
+
+                {/* KPI Metrics */}
+                <div className="analytics-metrics-grid">
+                  <div className="metric-box">
+                    <span>Average Order Value (AOV)</span>
+                    <h3>₹{orders.length ? Math.round(totalRevenue / orders.length) : 0}</h3>
+                    <small className="trend-up">▲ 14% vs last week</small>
+                  </div>
+                  <div className="metric-box">
+                    <span>Dine-In vs Delivery Ratio</span>
+                    <h3>62% Dine-In / 38% Delivery</h3>
+                    <small>High table turnover rate</small>
+                  </div>
+                  <div className="metric-box">
+                    <span>Loyalty Points Redeemed</span>
+                    <h3>450 TastyPoints (₹225 discount)</h3>
+                    <small>High customer retention</small>
+                  </div>
+                </div>
+
+                {/* Peak Hours & Best Sellers */}
+                <div className="analytics-charts-grid">
+                  {/* Peak Dining Hours Chart */}
+                  <div className="chart-card">
+                    <h4>🕒 Peak Dining &amp; Ordering Hours</h4>
+                    <div className="bar-chart-visual">
+                      <div className="bar-col"><div className="bar-fill" style={{ height: '25%' }}></div><span>12 PM</span></div>
+                      <div className="bar-col"><div className="bar-fill" style={{ height: '70%' }}></div><span>1 PM (Lunch)</span></div>
+                      <div className="bar-col"><div className="bar-fill" style={{ height: '40%' }}></div><span>2 PM</span></div>
+                      <div className="bar-col"><div className="bar-fill" style={{ height: '15%' }}></div><span>4 PM</span></div>
+                      <div className="bar-col"><div className="bar-fill" style={{ height: '55%' }}></div><span>7 PM</span></div>
+                      <div className="bar-col"><div className="bar-fill highlight" style={{ height: '95%' }}></div><span>8 PM (Peak Dinner)</span></div>
+                      <div className="bar-col"><div className="bar-fill" style={{ height: '80%' }}></div><span>9 PM</span></div>
+                      <div className="bar-col"><div className="bar-fill" style={{ height: '35%' }}></div><span>10 PM</span></div>
+                    </div>
+                  </div>
+
+                  {/* Top 5 Best Sellers */}
+                  <div className="chart-card">
+                    <h4>⭐ Top 5 Best-Selling Dishes</h4>
+                    <div className="bestsellers-list">
+                      <div className="bestseller-row">
+                        <span className="rank">1</span>
+                        <div className="dish-name-info">
+                          <strong>Chicken Dum Biryani</strong>
+                          <span>Hyderabadi Royal Handi</span>
+                        </div>
+                        <strong className="sales-stat">142 orders (₹42,458)</strong>
+                      </div>
+                      <div className="bestseller-row">
+                        <span className="rank">2</span>
+                        <div className="dish-name-info">
+                          <strong>Paneer Butter Masala</strong>
+                          <span>Rich Cashew Gravy</span>
+                        </div>
+                        <strong className="sales-stat">118 orders (₹31,742)</strong>
+                      </div>
+                      <div className="bestseller-row">
+                        <span className="rank">3</span>
+                        <div className="dish-name-info">
+                          <strong>Tandoori Chicken</strong>
+                          <span>Charcoal Clay Oven</span>
+                        </div>
+                        <strong className="sales-stat">94 orders (₹30,926)</strong>
+                      </div>
+                      <div className="bestseller-row">
+                        <span className="rank">4</span>
+                        <div className="dish-name-info">
+                          <strong>Garlic Naan</strong>
+                          <span>Artisanal Tandoor Bread</span>
+                        </div>
+                        <strong className="sales-stat">210 orders (₹14,490)</strong>
+                      </div>
+                      <div className="bestseller-row">
+                        <span className="rank">5</span>
+                        <div className="dish-name-info">
+                          <strong>Chocolate Lava Cake</strong>
+                          <span>Molten Belgian Chocolate</span>
+                        </div>
+                        <strong className="sales-stat">88 orders (₹13,112)</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* --- TAB 4: LIVE ORDERS LIST --- */}
             {activeTab === 'orders' && (
               <div className="admin-tab-panel">
                 <div className="panel-header-toolbar">
                   <div className="panel-title-block">
-                    <h3>Customer Orders</h3>
+                    <h3>Customer Orders History &amp; Tracking</h3>
                     <p>Track real-time delivery, takeaway, and table orders.</p>
                   </div>
 
@@ -388,8 +762,8 @@ function AdminDashboard() {
                         <tr>
                           <th>Order #</th>
                           <th>Customer</th>
-                          <th>Type & Address</th>
-                          <th>Items</th>
+                          <th>Type &amp; Address</th>
+                          <th>Customized Items</th>
                           <th>Total</th>
                           <th>Status</th>
                           <th>Actions</th>
@@ -427,6 +801,8 @@ function AdminDashboard() {
                                 {order.items?.map((it, i) => (
                                   <span key={i} className="order-item-pill">
                                     {it.quantity}x {it.name}
+                                    {it.spiceLevel && it.spiceLevel !== 'Default' && ` (${it.spiceLevel})`}
+                                    {it.addOns?.length > 0 && ` +${it.addOns.map((a) => a.name).join(',')}`}
                                   </span>
                                 ))}
                               </div>
@@ -469,19 +845,19 @@ function AdminDashboard() {
               </div>
             )}
 
-            {/* --- TAB 2: RESERVATIONS --- */}
+            {/* --- TAB 5: RESERVATIONS --- */}
             {activeTab === 'reservations' && (
               <div className="admin-tab-panel">
                 <div className="panel-header-toolbar">
                   <div className="panel-title-block">
-                    <h3>Table Reservations</h3>
-                    <p>Manage dine-in seating bookings and customer requests.</p>
+                    <h3>Table Reservations &amp; Floor Seating</h3>
+                    <p>Manage dine-in seating bookings, pre-orders, and seating zones.</p>
                   </div>
 
                   <div className="panel-search-box">
                     <input
                       type="text"
-                      placeholder="Search by guest name or email..."
+                      placeholder="Search by guest name, zone, or email..."
                       value={reservationSearch}
                       onChange={(e) => setReservationSearch(e.target.value)}
                       className="admin-search-input"
@@ -499,10 +875,9 @@ function AdminDashboard() {
                       <thead>
                         <tr>
                           <th>Guest Name</th>
-                          <th>Contact</th>
-                          <th>Date & Time</th>
-                          <th>Party Size</th>
-                          <th>Special Requests</th>
+                          <th>Zone &amp; Party</th>
+                          <th>Date &amp; Time</th>
+                          <th>Pre-Ordered Food</th>
                           <th>Status</th>
                           <th>Actions</th>
                         </tr>
@@ -510,50 +885,53 @@ function AdminDashboard() {
                       <tbody>
                         {filteredReservations.map((res) => (
                           <tr key={res._id}>
-                            <td><strong>{res.name}</strong></td>
-                            <td>{res.email}</td>
+                            <td>
+                              <strong>{res.name}</strong>
+                              <div className="cust-phone">📞 {res.phone || 'N/A'}</div>
+                              <div className="cust-email">{res.email}</div>
+                            </td>
+                            <td>
+                              <span className="zone-pill-badge">{res.seatingZone?.toUpperCase() || 'MAIN HALL'}</span>
+                              <div className="guests-count-badge">👥 {res.guests} Guests</div>
+                            </td>
                             <td>
                               <strong>{new Date(res.date).toLocaleDateString()}</strong> at <strong>{res.time}</strong>
                             </td>
                             <td>
-                              <span className="guests-count-badge">👥 {res.guests} Guests</span>
+                              {res.preOrderItems && res.preOrderItems.length > 0 ? (
+                                <div className="preorder-mini-list">
+                                  {res.preOrderItems.map((p, i) => (
+                                    <span key={i} className="preorder-item-pill">
+                                      {p.quantity}x {p.name}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="no-preorder-txt">None (Order at table)</span>
+                              )}
                             </td>
                             <td>
-                              <span className="res-msg">{res.message || 'No special requests'}</span>
+                              <select
+                                value={res.status}
+                                onChange={(e) => handleUpdateReservationStatus(res._id, e.target.value)}
+                                className={`status-dropdown status-${res.status}`}
+                              >
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="seated">Seated 🍽️</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="no-show">No-Show</option>
+                              </select>
                             </td>
                             <td>
-                              <span className={`status-pill status-${res.status}`}>
-                                {res.status?.toUpperCase()}
-                              </span>
-                            </td>
-                            <td>
-                              <div className="action-btn-group">
-                                {res.status !== 'confirmed' && (
-                                  <button
-                                    className="action-btn-mini confirm"
-                                    onClick={() => handleUpdateReservationStatus(res._id, 'confirmed')}
-                                    title="Confirm Booking"
-                                  >
-                                    ✓ Confirm
-                                  </button>
-                                )}
-                                {res.status !== 'cancelled' && (
-                                  <button
-                                    className="action-btn-mini cancel"
-                                    onClick={() => handleUpdateReservationStatus(res._id, 'cancelled')}
-                                    title="Cancel Booking"
-                                  >
-                                    ✕ Cancel
-                                  </button>
-                                )}
-                                <button
-                                  className="action-icon-btn delete"
-                                  onClick={() => handleDeleteReservation(res._id)}
-                                  title="Delete Reservation"
-                                >
-                                  🗑️
-                                </button>
-                              </div>
+                              <button
+                                className="action-icon-btn delete"
+                                onClick={() => handleDeleteReservation(res._id)}
+                                title="Delete Reservation"
+                              >
+                                🗑️
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -564,13 +942,13 @@ function AdminDashboard() {
               </div>
             )}
 
-            {/* --- TAB 3: MENU MANAGEMENT --- */}
+            {/* --- TAB 6: MENU MANAGEMENT --- */}
             {activeTab === 'menu' && (
               <div className="admin-tab-panel">
                 <div className="panel-header-toolbar">
                   <div className="panel-title-block">
-                    <h3>Menu Items & Catalog</h3>
-                    <p>Add new culinary dishes, modify pricing, or toggle item stock availability.</p>
+                    <h3>Menu Items &amp; Catalog</h3>
+                    <p>Add new dishes, modify prices, nutritional values, and toggle stock availability.</p>
                   </div>
 
                   <div className="panel-menu-actions">
@@ -610,7 +988,7 @@ function AdminDashboard() {
                           <span className={`dish-tag-badge ${item.tag === 'Veg' ? 'veg' : 'non-veg'}`}>
                             {item.tag === 'Veg' ? '🟢 Veg' : '🔴 Non-Veg'}
                           </span>
-                          <span className="card-cat-badge">{item.category}</span>
+                          {item.isChefSpecial && <span className="card-special-badge">⭐ Special</span>}
                         </div>
 
                         <div className="admin-card-body">
@@ -653,38 +1031,67 @@ function AdminDashboard() {
               </div>
             )}
 
-            {/* --- TAB 4: CONTACT INQUIRIES --- */}
-            {activeTab === 'contacts' && (
+            {/* --- TAB 7: PARTY & EVENT BOOKINGS --- */}
+            {activeTab === 'events' && (
               <div className="admin-tab-panel">
                 <div className="panel-header-toolbar">
                   <div className="panel-title-block">
-                    <h3>Customer Messages & Inquiries</h3>
-                    <p>Inquiries received from the Contact Us form.</p>
+                    <h3>🎉 Event &amp; Catering Booking Inquiries</h3>
+                    <p>Milestone birthdays, corporate feasts, and banquet reservations.</p>
                   </div>
                 </div>
 
-                {contacts.length === 0 ? (
+                {events.length === 0 ? (
                   <div className="admin-empty-table">
-                    <p>No customer messages found yet.</p>
+                    <p>No party &amp; catering inquiries received yet.</p>
                   </div>
                 ) : (
                   <div className="admin-table-wrapper">
                     <table className="admin-table">
                       <thead>
                         <tr>
-                          <th>Sender Name</th>
-                          <th>Email Address</th>
-                          <th>Message Content</th>
-                          <th>Received Date</th>
+                          <th>Client Name</th>
+                          <th>Event Type &amp; Guests</th>
+                          <th>Target Date</th>
+                          <th>Menu Package &amp; Est. Budget</th>
+                          <th>Special Requirements</th>
+                          <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {contacts.map((msg, idx) => (
-                          <tr key={msg._id || idx}>
-                            <td><strong>{msg.name}</strong></td>
-                            <td><a href={`mailto:${msg.email}`} className="admin-link">{msg.email}</a></td>
-                            <td><p className="msg-preview-text">{msg.message}</p></td>
-                            <td>{msg.createdAt ? new Date(msg.createdAt).toLocaleString() : 'Recent'}</td>
+                        {events.map((ev) => (
+                          <tr key={ev._id}>
+                            <td>
+                              <strong>{ev.name}</strong>
+                              <div className="cust-phone">📞 {ev.phone}</div>
+                              <div className="cust-email">{ev.email}</div>
+                            </td>
+                            <td>
+                              <span className="event-type-pill">{ev.eventType?.toUpperCase()}</span>
+                              <div className="guests-count-badge">👥 {ev.guestCount} Guests</div>
+                            </td>
+                            <td>
+                              <strong>{new Date(ev.eventDate).toLocaleDateString()}</strong>
+                            </td>
+                            <td>
+                              <div>{ev.preferredMenu}</div>
+                              <strong className="event-price-tag">₹{ev.estimatedBudget?.toLocaleString()}</strong>
+                            </td>
+                            <td>
+                              <p className="event-req-text">{ev.specialRequirements || 'Standard arrangement'}</p>
+                            </td>
+                            <td>
+                              <select
+                                value={ev.status}
+                                onChange={(e) => handleUpdateEventStatus(ev._id, e.target.value)}
+                                className={`status-dropdown status-${ev.status}`}
+                              >
+                                <option value="pending">Pending</option>
+                                <option value="in-review">In Review 💬</option>
+                                <option value="approved">Approved &amp; Booked ✅</option>
+                                <option value="declined">Declined</option>
+                              </select>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -741,7 +1148,7 @@ function AdminDashboard() {
                   >
                     <option value="starters">Starters</option>
                     <option value="biryanis">Biryanis</option>
-                    <option value="fried-rice-noodles">Fried Rice & Noodles</option>
+                    <option value="fried-rice-noodles">Fried Rice &amp; Noodles</option>
                     <option value="main-course">Main Course</option>
                     <option value="indian-breads">Indian Breads</option>
                     <option value="beverages">Beverages</option>
@@ -759,6 +1166,29 @@ function AdminDashboard() {
                     <option value="Non-Veg">🔴 Non-Veg</option>
                     <option value="">None / Beverage</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Spice Level</label>
+                  <select
+                    value={menuFormData.spiceLevel}
+                    onChange={(e) => setMenuFormData({ ...menuFormData, spiceLevel: e.target.value })}
+                  >
+                    <option value="1">🌿 Mild</option>
+                    <option value="2">🌶️ Medium</option>
+                    <option value="3">🔥 Hot</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Calories (kcal)</label>
+                  <input
+                    type="number"
+                    value={menuFormData.calories}
+                    onChange={(e) => setMenuFormData({ ...menuFormData, calories: e.target.value })}
+                  />
                 </div>
               </div>
 
@@ -784,15 +1214,28 @@ function AdminDashboard() {
                 ></textarea>
               </div>
 
-              <div className="form-group checkbox-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={menuFormData.available}
-                    onChange={(e) => setMenuFormData({ ...menuFormData, available: e.target.checked })}
-                  />
-                  <span>Mark dish as Available in Stock</span>
-                </label>
+              <div className="form-row">
+                <div className="form-group checkbox-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={menuFormData.available}
+                      onChange={(e) => setMenuFormData({ ...menuFormData, available: e.target.checked })}
+                    />
+                    <span>Available in Stock</span>
+                  </label>
+                </div>
+
+                <div className="form-group checkbox-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={menuFormData.isChefSpecial}
+                      onChange={(e) => setMenuFormData({ ...menuFormData, isChefSpecial: e.target.checked })}
+                    />
+                    <span>Chef's Spotlight Special</span>
+                  </label>
+                </div>
               </div>
 
               <div className="admin-modal-actions">
