@@ -71,9 +71,11 @@ function Header() {
           📍 Track Order
         </button>
 
-        <Link to="/admin" className="admin-nav-link" onClick={() => setShowNav(false)}>
-          ⚙️ Admin
-        </Link>
+        {user?.role === 'admin' && (
+          <Link to="/admin" className="admin-nav-link" onClick={() => setShowNav(false)}>
+            ⚙️ Admin
+          </Link>
+        )}
 
         {isAuthenticated ? (
           <>
