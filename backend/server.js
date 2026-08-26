@@ -34,12 +34,25 @@ app.use(['/api/menu', '/menu'], menuRouter);
 app.use(['/api/contact', '/contact'], contactRouter);
 
 // Health check routes
-app.get('/api', (req, res) => {
+app.all(['/api', '/'], (req, res) => {
   res.json({ message: 'TastyBite API is running' });
 });
 
-app.get('/', (req, res) => {
-  res.json({ message: 'TastyBite API is running' });
+// 404 handler for API routes
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: `Endpoint not found: ${req.method} ${req.originalUrl || req.url}`,
+  });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(err.status || 500).json({
+    success: false,
+    error: err.message || 'Internal Server Error',
+  });
 });
 
 const PORT = process.env.PORT || 5000;
