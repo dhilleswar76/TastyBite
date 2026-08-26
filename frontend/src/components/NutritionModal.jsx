@@ -29,7 +29,7 @@ function NutritionModal() {
 
         <div className="nutrition-hero-header">
           <img
-            src={nutritionItem.image || '/pictures-restaurant/restaurant-logo.png'}
+            src={nutritionItem.image || '/pictures-restaurant/restaurant-logo.webp'}
             alt={nutritionItem.name}
             className="nutrition-dish-img"
           />

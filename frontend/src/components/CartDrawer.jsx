@@ -116,7 +116,7 @@ function CartDrawer() {
                 return (
                   <div key={itemKey} className="cart-item-row">
                     <img
-                      src={item.image || '/pictures-restaurant/restaurant-logo.png'}
+                      src={item.image || '/pictures-restaurant/restaurant-logo.webp'}
                       alt={item.name}
                       className="cart-item-img"
                     />

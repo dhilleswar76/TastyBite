@@ -61,7 +61,7 @@ function DishCustomizationModal() {
 
         <div className="custom-dish-hero">
           <img
-            src={customizingItem.image || '/pictures-restaurant/restaurant-logo.png'}
+            src={customizingItem.image || '/pictures-restaurant/restaurant-logo.webp'}
             alt={customizingItem.name}
             className="custom-dish-img"
           />

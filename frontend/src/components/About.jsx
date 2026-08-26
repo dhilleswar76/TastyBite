@@ -12,7 +12,7 @@ function About() {
 
       <div className="about-grid">
         <div className="about-img-frame">
-          <img src="/pictures-restaurant/front-page-picture.png" alt="TastyBite Restaurant Ambiance" />
+          <img src="/pictures-restaurant/chicken-dum-biryani.webp" alt="TastyBite Culinary Heritage" />
         </div>
 
         <div className="about-content">

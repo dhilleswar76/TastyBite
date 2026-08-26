@@ -6,13 +6,13 @@ dotenv.config();
 
 // Menu data mirrored from frontend/src/data/menuData.js
 const menuItems = [
-  { category: 'starters', name: 'Paneer Tikka', description: 'Marinated cottage cheese cubes grilled in tandoor.', price: 249, image: '/pictures-restaurant/Paneer-Tikka.png', tag: 'Veg' },
-  { category: 'starters', name: 'Veg Spring Rolls', description: 'Crispy rolls stuffed with spiced vegetables.', price: 199, image: '/pictures-restaurant/vegetable-spring-rolls.png', tag: 'Veg' },
-  { category: 'starters', name: 'Crispy Corn', description: 'Golden fried corn tossed with herbs & spices.', price: 189, image: '/pictures-restaurant/crispy-corn.png', tag: 'Veg' },
-  { category: 'starters', name: 'Gobi Manchurian', description: 'Crispy cauliflower florets in Indo-Chinese sauce.', price: 199, image: '/pictures-restaurant/gobi-manchurian.png', tag: 'Veg' },
-  { category: 'starters', name: 'Paneer 65', description: 'South-Indian style spicy paneer starter.', price: 229, image: '/pictures-restaurant/paneer-65.png', tag: 'Veg' },
-  { category: 'starters', name: 'Chicken 65', description: 'Spicy deep-fried chicken with curry leaves.', price: 249, image: '/pictures-restaurant/chicken-65.png', tag: 'Non-Veg' },
-  { category: 'starters', name: 'Tandoori Chicken', description: 'Classic tandoor roasted chicken with spices.', price: 329, image: '/pictures-restaurant/tandoori-chicken.png', tag: 'Non-Veg' },
+  { category: 'starters', name: 'Paneer Tikka', description: 'Marinated cottage cheese cubes grilled in tandoor.', price: 249, image: '/pictures-restaurant/Paneer-Tikka.webp', tag: 'Veg' },
+  { category: 'starters', name: 'Veg Spring Rolls', description: 'Crispy rolls stuffed with spiced vegetables.', price: 199, image: '/pictures-restaurant/vegetable-spring-rolls.webp', tag: 'Veg' },
+  { category: 'starters', name: 'Crispy Corn', description: 'Golden fried corn tossed with herbs & spices.', price: 189, image: '/pictures-restaurant/crispy-corn.webp', tag: 'Veg' },
+  { category: 'starters', name: 'Gobi Manchurian', description: 'Crispy cauliflower florets in Indo-Chinese sauce.', price: 199, image: '/pictures-restaurant/gobi-manchurian.webp', tag: 'Veg' },
+  { category: 'starters', name: 'Paneer 65', description: 'South-Indian style spicy paneer starter.', price: 229, image: '/pictures-restaurant/paneer-65.webp', tag: 'Veg' },
+  { category: 'starters', name: 'Chicken 65', description: 'Spicy deep-fried chicken with curry leaves.', price: 249, image: '/pictures-restaurant/chicken-65.webp', tag: 'Non-Veg' },
+  { category: 'starters', name: 'Tandoori Chicken', description: 'Classic tandoor roasted chicken with spices.', price: 329, image: '/pictures-restaurant/tandoori-chicken.webp', tag: 'Non-Veg' },
   { category: 'biryanis', name: 'Chicken Dum Biryani', description: 'Hyderabadi style slow cooked biryani.', price: 299, image: '/pictures-restaurant/chicken-dum-biryani.webp', tag: 'Non-Veg' },
   { category: 'biryanis', name: 'Mutton Biryani', description: 'Tender mutton cooked with aromatic rice.', price: 349, image: '/pictures-restaurant/MuttonBiryani.webp', tag: 'Non-Veg' },
   { category: 'biryanis', name: 'Veg Biryani', description: 'Spiced basmati rice with vegetables.', price: 239, image: '/pictures-restaurant/veg-biryani.webp', tag: 'Veg' },

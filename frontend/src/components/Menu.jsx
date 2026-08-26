@@ -337,7 +337,7 @@ function Menu() {
               <article key={itemId} className="menu-item" data-category={item.category}>
                 <div className="menu-item-img-wrap">
                   <img
-                    src={item.image || '/pictures-restaurant/restaurant-logo.png'}
+                    src={item.image || '/pictures-restaurant/restaurant-logo.webp'}
                     alt={item.name}
                     loading="lazy"
                   />

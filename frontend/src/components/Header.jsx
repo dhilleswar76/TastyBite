@@ -72,7 +72,7 @@ function Header() {
     <header className="header">
       {/* Brand Logo */}
       <Link to="/" className="logo">
-        <img src="/pictures-restaurant/restaurant-logo.png" alt="TastyBite Logo" />
+        <img src="/pictures-restaurant/restaurant-logo.webp" alt="TastyBite Logo" />
         <span>TastyBite</span>
       </Link>
 
