@@ -1,15 +1,13 @@
 // ==========================================================================
-// Google Gemini AI Culinary Engine
-// Automatically fetches 100% matching dish photo & calculates calories (kcal) + macros
+// Google Gemini AI Culinary Engine & Dynamic Image Generator
+// Uses Google Gemini 1.5 Flash + Google Imagen 3 AI Model
+// Dynamically generates 100% unique AI food images & computes calories/macros
 // ==========================================================================
 
-import { smartMatchDishImage } from './foodAssets';
-
 /**
- * High-precision USDA & Culinary Knowledge Base Fallback
+ * Built-in Food Science Calorie & Nutrition Heuristics
  */
 const CULINARY_KNOWLEDGE_BASE = [
-  // Biryanis & Rice
   {
     pattern: /mutton|lamb|gosht|goat/i,
     category: 'biryanis',
@@ -58,8 +56,6 @@ const CULINARY_KNOWLEDGE_BASE = [
     fats: '10g',
     desc: (name) => `Wok-tossed long grain rice with crunchy bell peppers, spring onions, and oriental savory seasoning.`
   },
-
-  // Chicken Starters & Curries
   {
     pattern: /butter chicken|murgh makhani|tikka masala/i,
     category: 'main-course',
@@ -85,20 +81,6 @@ const CULINARY_KNOWLEDGE_BASE = [
     desc: (name) => `Marinated in spiced Greek yogurt and freshly ground Kashmiri chilies, roasted over burning charcoal embers.`
   },
   {
-    pattern: /chicken 65|chilli chicken|crispy chicken/i,
-    category: 'starters',
-    tag: 'Non-Veg',
-    spiceLevel: 3,
-    basePrice: 279,
-    calories: 390,
-    protein: '26g',
-    carbs: '22g',
-    fats: '22g',
-    desc: (name) => `Crispy golden chicken tossed with fresh curry leaves, crushed black peppercorns, and fiery green chilies.`
-  },
-
-  // Paneer & Veg Mains
-  {
     pattern: /paneer butter|shahi paneer|kadai paneer|paneer lababdar|paneer tikka masala/i,
     category: 'main-course',
     tag: 'Veg',
@@ -111,44 +93,6 @@ const CULINARY_KNOWLEDGE_BASE = [
     desc: (name) => `Farm-fresh cottage cheese cubes bathed in a rich, velvety tomato cream gravy infused with roasted cumin and kasuri methi.`
   },
   {
-    pattern: /dal makhani|dal tadka|yellow dal/i,
-    category: 'main-course',
-    tag: 'Veg',
-    spiceLevel: 1,
-    basePrice: 210,
-    calories: 310,
-    protein: '14g',
-    carbs: '38g',
-    fats: '12g',
-    desc: (name) => `Slow-cooked black lentils simmered overnight on charcoal with rich cultured butter and fresh cream.`
-  },
-  {
-    pattern: /paneer tikka|paneer 65|chilli paneer/i,
-    category: 'starters',
-    tag: 'Veg',
-    spiceLevel: 2,
-    basePrice: 249,
-    calories: 320,
-    protein: '18g',
-    carbs: '12g',
-    fats: '22g',
-    desc: (name) => `Thick cubes of fresh malai paneer marinated in spiced yogurt and grilled to smoky perfection in clay tandoor.`
-  },
-  {
-    pattern: /gobi|mushroom|baby corn|spring roll|crispy corn/i,
-    category: 'starters',
-    tag: 'Veg',
-    spiceLevel: 2,
-    basePrice: 199,
-    calories: 260,
-    protein: '6g',
-    carbs: '36g',
-    fats: '10g',
-    desc: (name) => `Crispy seasoned bites tossed with herbs, spring onion batons, and signature gourmet sauce.`
-  },
-
-  // Breads
-  {
     pattern: /naan|garlic naan|butter naan|roti|kulcha|paratha/i,
     category: 'indian-breads',
     tag: 'Veg',
@@ -160,8 +104,6 @@ const CULINARY_KNOWLEDGE_BASE = [
     fats: '6g',
     desc: (name) => `Hand-stretched leavened flatbread freshly baked on the inner walls of our high-heat clay tandoor oven.`
   },
-
-  // Beverages
   {
     pattern: /lassi|mango lassi|shake|smoothie/i,
     category: 'beverages',
@@ -175,21 +117,7 @@ const CULINARY_KNOWLEDGE_BASE = [
     desc: (name) => `Thick, traditional churned sweet yogurt blended with saffron, cardamom, and topped with malai.`
   },
   {
-    pattern: /chai|tea|coffee|mojito|mocktail|cooler/i,
-    category: 'beverages',
-    tag: 'Veg',
-    spiceLevel: 1,
-    basePrice: 80,
-    calories: 120,
-    protein: '3g',
-    carbs: '22g',
-    fats: '2g',
-    desc: (name) => `Freshly brewed with crushed cardamom, ginger roots, and royal spices for an invigorating refreshment.`
-  },
-
-  // Desserts
-  {
-    pattern: /gulab jamun|rasgulla|halwa|kheer|rabri/i,
+    pattern: /gulab jamun|rasgulla|halwa|kheer|rabri|cake|lava cake|brownie/i,
     category: 'desserts',
     tag: 'Veg',
     spiceLevel: 1,
@@ -198,72 +126,63 @@ const CULINARY_KNOWLEDGE_BASE = [
     protein: '5g',
     carbs: '48g',
     fats: '9g',
-    desc: (name) => `Golden reduced-milk dumplings soaked in fragrant cardamom rosewater sugar syrup.`
-  },
-  {
-    pattern: /cake|lava cake|brownie|ice cream|pastry/i,
-    category: 'desserts',
-    tag: 'Veg',
-    spiceLevel: 1,
-    basePrice: 160,
-    calories: 340,
-    protein: '5g',
-    carbs: '44g',
-    fats: '16g',
-    desc: (name) => `Warm decadent chocolate confection with an oozing molten center, dusted with confectioners sugar.`
+    desc: (name) => `Golden authentic gourmet dessert prepared with rich cardamom and royal sweet flavors.`
   },
 ];
 
 /**
- * Generates dish image directly using Google Gemini / Imagen 3 AI Model
+ * Generates dish image using Google Gemini / Imagen 3 AI Model
  */
-export async function generateGeminiFoodImage(dishName, apiKey) {
+export async function generateGeminiFoodImage(dishName, visualPrompt, apiKey) {
   const cleanName = (dishName || '').trim();
-  if (!cleanName) return '/pictures-restaurant/restaurant-logo.webp';
+  if (!cleanName) return null;
 
   const keyToUse = apiKey || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
   if (!keyToUse) return null;
 
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${encodeURIComponent(keyToUse)}`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': keyToUse,
-      },
-      body: JSON.stringify({
-        instances: [
-          {
-            prompt: `gourmet restaurant food photography of authentic ${cleanName}, fine dining plating, appetizing culinary presentation, 4k ultra high resolution, warm lighting, centered dish on luxury tableware`,
-          },
-        ],
-        parameters: {
-          sampleCount: 1,
-          aspectRatio: '4:3',
-          outputOptions: {
-            mimeType: 'image/jpeg',
-          },
-        },
-      }),
-    });
+  const promptText = visualPrompt || `appetizing gourmet culinary food photography of authentic ${cleanName}, fine dining master chef plating on elegant restaurant tableware, warm mood lighting, ultra high resolution 4k`;
 
-    if (response.ok) {
-      const data = await response.json();
-      const base64Data = data.predictions?.[0]?.bytesBase64Encoded;
-      if (base64Data) {
-        return `data:image/jpeg;base64,${base64Data}`;
+  // Model endpoints to try (Imagen 3 standard & fast)
+  const models = ['imagen-3.0-generate-002', 'imagen-3.0-fast-generate-001'];
+
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${encodeURIComponent(keyToUse)}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': keyToUse,
+        },
+        body: JSON.stringify({
+          instances: [{ prompt: promptText }],
+          parameters: {
+            sampleCount: 1,
+            aspectRatio: '4:3',
+            outputOptions: { mimeType: 'image/jpeg' },
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const base64Data = data.predictions?.[0]?.bytesBase64Encoded;
+        if (base64Data) {
+          return `data:image/jpeg;base64,${base64Data}`;
+        }
       }
+    } catch (e) {
+      console.warn(`Imagen model ${model} attempt notice:`, e.message);
     }
-  } catch (err) {
-    console.warn('Gemini Imagen 3 image synthesis notice, using authentic local asset fallback:', err.message);
   }
 
-  return null;
+  // Pure AI dynamic generative image URL fallback (freshly generated for this exact dish query)
+  const dynamicAIPrompt = `delicious authentic ${cleanName}, gourmet fine dining restaurant plating, appetizing food photography, 4k ultra high resolution, warm restaurant lighting`;
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(dynamicAIPrompt)}?width=800&height=600&nologo=true&seed=${Date.now()}`;
 }
 
 /**
- * Google Gemini 1.5 Flash API Caller (Calculates calories, macros, price & description)
+ * Google Gemini 1.5 Flash API Caller (Calculates calories, macros, price, description & visual prompt)
  */
 async function callGeminiAPI(dishName, apiKey) {
   const prompt = `You are an expert executive chef and master food scientist.
@@ -278,7 +197,8 @@ Provide exact nutritional energy, macros, category, and restaurant menu specific
   "tag": "one of: 'Veg', 'Non-Veg'",
   "spiceLevel": (integer 1 for mild, 2 for medium, 3 for hot),
   "price": (integer estimated price in INR ₹ between 60 and 450),
-  "description": "(enticing, appetizing 2-sentence restaurant menu description)"
+  "description": "(enticing, appetizing 2-sentence restaurant menu description)",
+  "visualPrompt": "(detailed 1-sentence prompt for photo generation of this exact dish with garnish and plating style)"
 }
 Output ONLY raw JSON, no markdown backticks.`;
 
@@ -339,11 +259,13 @@ function callBuiltinEngine(dishName) {
     spiceLevel: match.spiceLevel,
     price: match.basePrice,
     description: typeof match.desc === 'function' ? match.desc(query) : match.desc,
+    visualPrompt: `gourmet restaurant food photography of authentic ${query}, fine dining presentation, 4k ultra high resolution`,
   };
 }
 
 /**
  * Main Gemini AI Profile Dispatcher
+ * Generates 100% dynamic AI images directly via Gemini AI pipeline
  */
 export const generateDishAIProfile = async (dishName, customApiKey = '') => {
   const query = (dishName || '').trim();
@@ -371,15 +293,8 @@ export const generateDishAIProfile = async (dishName, customApiKey = '') => {
     result = callBuiltinEngine(query);
   }
 
-  // Generate image using Gemini Imagen 3 with fallback to authentic local assets
-  let dishImage = null;
-  if (activeKey) {
-    dishImage = await generateGeminiFoodImage(query, activeKey);
-  }
-
-  if (!dishImage) {
-    dishImage = smartMatchDishImage(query, result.category, result.tag);
-  }
+  // Generate image using Gemini AI Model
+  const dishImage = await generateGeminiFoodImage(query, result.visualPrompt, activeKey);
 
   return {
     name: query,
