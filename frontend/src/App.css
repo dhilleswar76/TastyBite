@@ -63,6 +63,21 @@ a:hover {
   color: #ffa040;
 }
 
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 /* ==========================================================================
    1. Header & Sticky Navigation
    ========================================================================== */
@@ -645,38 +660,52 @@ a:hover {
 }
 
 .btn-hero-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: #fff;
+  color: #fff !important;
   padding: 0.95rem 2.2rem;
   border-radius: var(--radius-pill);
   font-size: 1.05rem;
   font-weight: 800;
   text-decoration: none;
   box-shadow: 0 6px 25px var(--primary-glow);
-  transition: all 0.25s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .btn-hero-primary:hover {
   transform: translateY(-3px) scale(1.03);
-  color: #fff;
+  box-shadow: 0 8px 30px var(--primary-glow);
+  color: #fff !important;
 }
 
 .btn-hero-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(8px);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff !important;
+  border: 1px solid rgba(212, 175, 55, 0.4);
   padding: 0.95rem 2.2rem;
   border-radius: var(--radius-pill);
   font-size: 1.05rem;
   font-weight: 700;
   text-decoration: none;
-  transition: all 0.25s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
 }
 
 .btn-hero-secondary:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
+  background: rgba(212, 175, 55, 0.18);
+  border-color: var(--gold-light);
+  color: var(--gold-light) !important;
+  transform: translateY(-3px) scale(1.03);
 }
 
 .hero-highlights-strip {
