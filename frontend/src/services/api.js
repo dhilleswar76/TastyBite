@@ -76,6 +76,19 @@ export const authAPI = {
     });
     return parseResponse(response, 'Failed to get user');
   },
+
+  // Update user profile
+  updateProfile: async (profileData, token) => {
+    const response = await fetch(`${API_URL}/auth/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(profileData),
+    });
+    return parseResponse(response, 'Failed to update profile');
+  },
 };
 
 // Reservation API

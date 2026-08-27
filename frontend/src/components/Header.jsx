@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { getAvatarGradient, getInitials } from '../utils/avatar';
+import ProfileEditModal from './ProfileEditModal';
 
 function Header() {
   const [showNav, setShowNav] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showProfileEditModal, setShowProfileEditModal] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
@@ -13,8 +16,7 @@ function Header() {
 
   const { totalItemsCount, setIsCartOpen, loyaltyPoints, openOrderTracker } = useCart();
 
-  useEffect(() => {
-    // Check if user is logged in
+  const loadUserData = () => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
 
@@ -29,7 +31,20 @@ function Header() {
       setIsAuthenticated(false);
       setUser(null);
     }
+  };
+
+  useEffect(() => {
+    loadUserData();
   }, [location]);
+
+  // Listen to profile updates across the app
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      loadUserData();
+    };
+    window.addEventListener('user-profile-updated', handleProfileUpdate);
+    return () => window.removeEventListener('user-profile-updated', handleProfileUpdate);
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -59,14 +74,6 @@ function Header() {
 
   const isAuthPage = location.pathname === '/signup' || location.pathname === '/signin';
   const isAdminPage = location.pathname === '/admin';
-
-  // Get user initials for avatar
-  const getInitials = (name) => {
-    if (!name) return '👤';
-    const parts = name.trim().split(' ');
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-  };
 
   return (
     <header className="header">
@@ -128,8 +135,15 @@ function Header() {
             title="My Profile & Loyalty Rewards"
             aria-label="User Profile"
           >
-            {isAuthenticated && user?.name ? (
-              <span className="profile-initials">{getInitials(user.name)}</span>
+            {user?.avatar ? (
+              <img src={user.avatar} alt="Profile" className="header-profile-avatar-img" />
+            ) : isAuthenticated && user?.name ? (
+              <span
+                className="profile-initials"
+                style={{ background: getAvatarGradient(user.name) }}
+              >
+                {getInitials(user.name)}
+              </span>
             ) : (
               <span className="profile-icon-guest">👤</span>
             )}
@@ -140,13 +154,36 @@ function Header() {
             <div className="profile-popover-card">
               {/* User Header Card */}
               <div className="profile-popover-header">
-                <div className="popover-avatar">
-                  {isAuthenticated && user?.name ? (
-                    <span className="popover-avatar-initials">{getInitials(user.name)}</span>
-                  ) : (
-                    <span className="popover-avatar-icon">👤</span>
+                <div className="popover-avatar-wrap">
+                  <div className="popover-avatar">
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt="Profile" className="popover-avatar-img" />
+                    ) : isAuthenticated && user?.name ? (
+                      <div
+                        className="popover-avatar-initials"
+                        style={{ background: getAvatarGradient(user.name) }}
+                      >
+                        {getInitials(user.name)}
+                      </div>
+                    ) : (
+                      <span className="popover-avatar-icon">👤</span>
+                    )}
+                  </div>
+                  {isAuthenticated && (
+                    <button
+                      type="button"
+                      className="popover-edit-avatar-icon-btn"
+                      onClick={() => {
+                        setShowProfileDropdown(false);
+                        setShowProfileEditModal(true);
+                      }}
+                      title="Edit Profile Picture"
+                    >
+                      📷
+                    </button>
                   )}
                 </div>
+
                 <div className="popover-user-details">
                   <h4>{isAuthenticated && user?.name ? user.name : 'Guest Gourmet'}</h4>
                   <p>{isAuthenticated && user?.email ? user.email : 'Welcome to TastyBite!'}</p>
@@ -176,6 +213,20 @@ function Header() {
 
               {/* Quick Navigation Links */}
               <div className="profile-popover-menu">
+                {isAuthenticated && (
+                  <button
+                    type="button"
+                    className="popover-menu-item edit-profile-item"
+                    onClick={() => {
+                      setShowProfileDropdown(false);
+                      setShowProfileEditModal(true);
+                    }}
+                  >
+                    <span>🖼️ Edit Profile &amp; Picture</span>
+                    <span className="item-arrow">&rarr;</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   className="popover-menu-item"
@@ -261,6 +312,15 @@ function Header() {
           &#9776;
         </button>
       </div>
+
+      {/* Profile Edit Modal */}
+      {showProfileEditModal && (
+        <ProfileEditModal
+          user={user}
+          onClose={() => setShowProfileEditModal(false)}
+          onUserUpdated={(updated) => setUser(updated)}
+        />
+      )}
     </header>
   );
 }

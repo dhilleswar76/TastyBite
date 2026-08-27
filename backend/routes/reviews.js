@@ -69,7 +69,7 @@ router.get('/', async (req, res) => {
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { userName, userEmail, rating, comment, dishRecommended, userAvatar } = req.body;
+    const { userName, userEmail, rating, comment, dishRecommended, userAvatar, photos } = req.body;
 
     if (!userName || !rating || !comment) {
       return res.status(400).json({
@@ -85,6 +85,7 @@ router.post('/', async (req, res) => {
       comment,
       dishRecommended,
       userAvatar: userAvatar || '',
+      photos: Array.isArray(photos) ? photos : [],
       isVerified: true,
     });
 

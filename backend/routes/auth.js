@@ -38,6 +38,7 @@ router.post('/signup', async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar || '',
       },
     });
   } catch (error) {
@@ -102,6 +103,7 @@ router.post('/login', async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar || '',
       },
     });
   } catch (error) {
@@ -126,12 +128,46 @@ router.get('/me', protect, async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar || '',
       },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       error: 'Server Error',
+    });
+  }
+});
+
+// @route   PUT /api/auth/profile
+// @desc    Update user profile (avatar, name)
+// @access  Private
+router.put('/profile', protect, async (req, res) => {
+  try {
+    const { name, avatar } = req.body;
+    const fieldsToUpdate = {};
+    if (name) fieldsToUpdate.name = name;
+    if (avatar !== undefined) fieldsToUpdate.avatar = avatar;
+
+    const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar || '',
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Server Error',
     });
   }
 });
