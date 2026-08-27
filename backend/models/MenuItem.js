@@ -80,7 +80,7 @@ const menuItemSchema = new mongoose.Schema({
   },
   customizable: {
     type: Boolean,
-    default: true,
+    default: false,
   },
   customization: {
     type: {

@@ -27,7 +27,7 @@ const reviewSchema = new mongoose.Schema({
   },
   userAvatar: {
     type: String,
-    default: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+    default: '',
   },
   isVerified: {
     type: Boolean,

@@ -9,66 +9,10 @@ function DishCustomizationModal() {
   const [cookingNotes, setCookingNotes] = useState('');
   const [qty, setQty] = useState(1);
 
-  // Extract or generate tailored customization config
+  // Extract item-specific customization config
   const customConfig = useMemo(() => {
     if (!customizingItem) return null;
-
-    if (customizingItem.customization && customizingItem.customization.addOns) {
-      return customizingItem.customization;
-    }
-
-    // Default fallback by category if not explicitly set
-    const cat = customizingItem.category;
-    if (cat === 'beverages') {
-      return {
-        type: 'sweet',
-        options: ['Low Sugar', 'Normal Sweet', 'Extra Sweet', 'Sugar-Free (Stevia)'],
-        addOns: [
-          { id: 'dry-fruits', name: 'Crushed Almonds & Pistachios', price: 35, icon: '🌰' },
-          { id: 'malai', name: 'Thick Fresh Malai', price: 25, icon: '🥛' },
-          { id: 'kesar', name: 'Kashmiri Saffron Strands', price: 30, icon: '✨' },
-        ],
-        allowsNotes: true,
-      };
-    }
-
-    if (cat === 'desserts') {
-      return {
-        type: 'temperature',
-        options: ['Served Piping Hot', 'Warm', 'Room Temperature'],
-        addOns: [
-          { id: 'vanilla-icecream', name: 'Vanilla Ice Cream Scoop', price: 50, icon: '🍨' },
-          { id: 'choco-fudge', name: 'Hot Chocolate Fudge Drizzle', price: 35, icon: '🍫' },
-          { id: 'roasted-nuts', name: 'Roasted Nuts & Cashews', price: 30, icon: '🌰' },
-        ],
-        allowsNotes: true,
-      };
-    }
-
-    if (cat === 'indian-breads') {
-      return {
-        type: 'none',
-        options: ['Crispy Well-Done', 'Soft & Fluffy'],
-        addOns: [
-          { id: 'desi-ghee', name: 'Brushed Pure Desi Ghee', price: 20, icon: '🧈' },
-          { id: 'cheese-stuffed', name: 'Stuffed Molten Cheese', price: 45, icon: '🧀' },
-        ],
-        allowsNotes: true,
-      };
-    }
-
-    // Default spicy for starters, biryani, rice, main-course
-    return {
-      type: 'spicy',
-      options: ['Mild', 'Medium', 'Hot', 'Extra Hot'],
-      addOns: [
-        { id: 'extra-cheese', name: 'Extra Melted Cheese', price: 40, icon: '🧀' },
-        { id: 'garlic-butter', name: 'Garlic Butter Tadka', price: 25, icon: '🧄' },
-        { id: 'mint-chutney', name: 'Spiced Mint Chutney Dip', price: 20, icon: '🌿' },
-        { id: 'crispy-onions', name: 'Caramelized Birista Onions', price: 25, icon: '🧅' },
-      ],
-      allowsNotes: true,
-    };
+    return customizingItem.customization || null;
   }, [customizingItem]);
 
   useEffect(() => {

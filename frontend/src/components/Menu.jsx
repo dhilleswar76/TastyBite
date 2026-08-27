@@ -385,16 +385,7 @@ function Menu() {
                       <button disabled className="out-of-stock-btn">
                         Currently Unavailable
                       </button>
-                    ) : item.customizable === false ? (
-                      <div className="card-actions-single">
-                        <button
-                          className="add-to-cart-btn-primary full-width-action"
-                          onClick={() => addToCart(item, 1)}
-                        >
-                          <span>+ Add to Cart (₹{item.price})</span>
-                        </button>
-                      </div>
-                    ) : (
+                    ) : item.customizable ? (
                       <div className="card-actions-duo">
                         <button
                           className="customize-btn"
@@ -408,6 +399,38 @@ function Menu() {
                           onClick={() => addToCart(item, 1)}
                         >
                           <span>+ Add (₹{item.price})</span>
+                        </button>
+                      </div>
+                    ) : currentQty > 0 ? (
+                      <div className="card-qty-stepper">
+                        <button
+                          onClick={() => {
+                            const found = cartItems.find((i) => (i._id || i.id) === itemId);
+                            if (found) {
+                              updateQuantity(found.cartKey || itemId, found.quantity - 1);
+                            }
+                          }}
+                          className="card-step-btn minus"
+                          aria-label="Decrease quantity"
+                        >
+                          -
+                        </button>
+                        <span className="card-step-val">{currentQty} in Cart</span>
+                        <button
+                          onClick={() => addToCart(item, 1)}
+                          className="card-step-btn plus"
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="card-actions-single">
+                        <button
+                          className="add-to-cart-btn-primary full-width-action"
+                          onClick={() => addToCart(item, 1)}
+                        >
+                          <span>+ Add to Cart (₹{item.price})</span>
                         </button>
                       </div>
                     )}

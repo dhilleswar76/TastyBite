@@ -11,7 +11,7 @@ const defaultReviews = [
     rating: 5,
     comment: 'The Hyderabadi Dum Biryani and Garlic Naan were out of this world! Incredible aroma and authentic royal flavors. The rooftop seating atmosphere is breathtaking.',
     dishRecommended: 'Chicken Dum Biryani',
-    userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+    userAvatar: '',
     isVerified: true,
     createdAt: new Date('2026-08-15'),
   },
@@ -21,7 +21,7 @@ const defaultReviews = [
     rating: 5,
     comment: 'Celebrated our anniversary at the VIP Private Dining room. Outstanding hospitality, quick service, and the Paneer Butter Masala was creamy perfection.',
     dishRecommended: 'Paneer Butter Masala',
-    userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+    userAvatar: '',
     isVerified: true,
     createdAt: new Date('2026-08-20'),
   },
@@ -31,7 +31,7 @@ const defaultReviews = [
     rating: 5,
     comment: 'Love the QR table ordering! We sat down, scanned the QR, ordered directly and food arrived in 15 minutes piping hot. The Chocolate Lava Cake is a must-try!',
     dishRecommended: 'Chocolate Lava Cake',
-    userAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
+    userAvatar: '',
     isVerified: true,
     createdAt: new Date('2026-08-22'),
   },
@@ -69,7 +69,7 @@ router.get('/', async (req, res) => {
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { userName, userEmail, rating, comment, dishRecommended } = req.body;
+    const { userName, userEmail, rating, comment, dishRecommended, userAvatar } = req.body;
 
     if (!userName || !rating || !comment) {
       return res.status(400).json({
@@ -84,6 +84,7 @@ router.post('/', async (req, res) => {
       rating: Number(rating),
       comment,
       dishRecommended,
+      userAvatar: userAvatar || '',
       isVerified: true,
     });
 
