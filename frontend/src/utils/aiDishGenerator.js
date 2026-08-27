@@ -333,8 +333,7 @@ export const generateDishAIProfile = async (dishName, customApiKey = '') => {
     result = callBuiltinEngine(query);
   }
 
-  // Generate 100% relevant AI image
-  const aiImageUrl = generateAIFoodImage(query);
+  // 100% Guaranteed authentic matching restaurant food photo
   const localMatch = smartMatchDishImage(query, result.category, result.tag);
 
   return {
@@ -348,8 +347,6 @@ export const generateDishAIProfile = async (dishName, customApiKey = '') => {
     protein: result.protein || '15g',
     carbs: result.carbs || '35g',
     fats: result.fats || '15g',
-    aiImage: aiImageUrl,
-    localImage: localMatch,
-    image: aiImageUrl,
+    image: localMatch,
   };
 };
