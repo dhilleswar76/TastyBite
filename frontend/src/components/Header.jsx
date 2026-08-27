@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { getAvatarGradient, getInitials } from '../utils/avatar';
 import ProfileEditModal from './ProfileEditModal';
@@ -83,18 +83,59 @@ function Header() {
         <span>TastyBite</span>
       </Link>
 
-      {/* Main Navigation Bar */}
+      {/* Main Multi-Page Navigation Bar */}
       <nav className={`nav ${showNav ? 'show' : ''}`}>
         {!isAuthPage && !isAdminPage && (
           <>
-            <a href="#home" onClick={() => setShowNav(false)}>Home</a>
-            <a href="#about" onClick={() => setShowNav(false)}>About</a>
-            <a href="#menu" onClick={() => setShowNav(false)}>Menu</a>
-            <a href="#ambiance" onClick={() => setShowNav(false)}>Ambiance</a>
-            <a href="#reservations" onClick={() => setShowNav(false)}>Reservations</a>
-            <a href="#events" onClick={() => setShowNav(false)}>Events</a>
-            <a href="#reviews" onClick={() => setShowNav(false)}>Reviews</a>
-            <a href="#contact" onClick={() => setShowNav(false)}>Contact</a>
+            <NavLink
+              to="/"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              Home
+            </NavLink>
+            <NavLink
+              to="/menu"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              Menu
+            </NavLink>
+            <NavLink
+              to="/about"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              About
+            </NavLink>
+            <NavLink
+              to="/reservations"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              Reservations
+            </NavLink>
+            <NavLink
+              to="/events"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              Events &amp; Catering
+            </NavLink>
+            <NavLink
+              to="/reviews"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              Reviews
+            </NavLink>
+            <NavLink
+              to="/contact"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              Contact
+            </NavLink>
           </>
         )}
       </nav>
@@ -213,6 +254,15 @@ function Header() {
 
               {/* Quick Navigation Links */}
               <div className="profile-popover-menu">
+                <Link
+                  to="/profile"
+                  className="popover-menu-item view-profile-item"
+                  onClick={() => setShowProfileDropdown(false)}
+                >
+                  <span>👤 My Account &amp; Rewards Page</span>
+                  <span className="item-arrow">&rarr;</span>
+                </Link>
+
                 {isAuthenticated && (
                   <button
                     type="button"
@@ -239,23 +289,23 @@ function Header() {
                   <span className="item-arrow">&rarr;</span>
                 </button>
 
-                <a
-                  href="#reservations"
+                <Link
+                  to="/reservations"
                   className="popover-menu-item"
                   onClick={() => setShowProfileDropdown(false)}
                 >
                   <span>📅 Table Reservations</span>
                   <span className="item-arrow">&rarr;</span>
-                </a>
+                </Link>
 
-                <a
-                  href="#events"
+                <Link
+                  to="/events"
                   className="popover-menu-item"
                   onClick={() => setShowProfileDropdown(false)}
                 >
                   <span>🎉 Event Inquiries</span>
                   <span className="item-arrow">&rarr;</span>
-                </a>
+                </Link>
 
                 {user?.role === 'admin' && (
                   <Link

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 function Hero() {
   return (
     <section id="home" className="hero">
@@ -8,12 +10,12 @@ function Hero() {
           Experience handcrafted dum biryanis, clay oven tandoori delicacies, and artisanal desserts prepared with royal spices and pure culinary passion.
         </p>
         <div className="hero-btn-group">
-          <a href="#menu" className="btn-hero-primary">
+          <Link to="/menu" className="btn-hero-primary">
             Explore Menu &amp; Order 🛒
-          </a>
-          <a href="#reservations" className="btn-hero-secondary">
+          </Link>
+          <Link to="/reservations" className="btn-hero-secondary">
             Reserve a Table 📅
-          </a>
+          </Link>
         </div>
         <div className="hero-highlights-strip">
           <div className="highlight-item">⭐ 4.9/5 (1,480+ Diners)</div>
