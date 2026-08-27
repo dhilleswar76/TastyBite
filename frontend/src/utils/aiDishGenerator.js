@@ -1,7 +1,6 @@
 // ==========================================================================
-// Google Gemini AI Culinary Engine & Dynamic Image Generator
-// Uses Google Gemini 1.5 Flash + Google Imagen 3 AI Model
-// Dynamically generates 100% unique AI food images & computes calories/macros
+// Google Gemini AI Culinary Engine & Dynamic Image Synthesis
+// Uses Google Gemini AI with automatic multi-model failover & dynamic photo rendering
 // ==========================================================================
 
 /**
@@ -131,58 +130,21 @@ const CULINARY_KNOWLEDGE_BASE = [
 ];
 
 /**
- * Generates dish image using Google Gemini / Imagen 3 AI Model
+ * Generates photorealistic AI food photography URL tailored specifically to the dish
  */
-export async function generateGeminiFoodImage(dishName, visualPrompt, apiKey) {
+export function generateDynamicAIFoodImage(dishName, visualPrompt) {
   const cleanName = (dishName || '').trim();
-  if (!cleanName) return null;
+  if (!cleanName) return '/pictures-restaurant/restaurant-logo.webp';
 
-  const keyToUse = apiKey || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
-  if (!keyToUse) return null;
+  const promptText = visualPrompt
+    ? `gourmet restaurant food photography of ${visualPrompt}, 4k ultra high resolution, delicious fine dining master chef presentation`
+    : `gourmet fine dining restaurant food photography of authentic ${cleanName}, master chef plating on luxury tableware, 4k ultra resolution, appetizing culinary lighting`;
 
-  const promptText = visualPrompt || `appetizing gourmet culinary food photography of authentic ${cleanName}, fine dining master chef plating on elegant restaurant tableware, warm mood lighting, ultra high resolution 4k`;
-
-  // Model endpoints to try (Imagen 3 standard & fast)
-  const models = ['imagen-3.0-generate-002', 'imagen-3.0-fast-generate-001'];
-
-  for (const model of models) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${encodeURIComponent(keyToUse)}`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': keyToUse,
-        },
-        body: JSON.stringify({
-          instances: [{ prompt: promptText }],
-          parameters: {
-            sampleCount: 1,
-            aspectRatio: '4:3',
-            outputOptions: { mimeType: 'image/jpeg' },
-          },
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const base64Data = data.predictions?.[0]?.bytesBase64Encoded;
-        if (base64Data) {
-          return `data:image/jpeg;base64,${base64Data}`;
-        }
-      }
-    } catch (e) {
-      console.warn(`Imagen model ${model} attempt notice:`, e.message);
-    }
-  }
-
-  // Pure AI dynamic generative image URL fallback (freshly generated for this exact dish query)
-  const dynamicAIPrompt = `delicious authentic ${cleanName}, gourmet fine dining restaurant plating, appetizing food photography, 4k ultra high resolution, warm restaurant lighting`;
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(dynamicAIPrompt)}?width=800&height=600&nologo=true&seed=${Date.now()}`;
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=800&height=600&nologo=true&seed=${Date.now()}`;
 }
 
 /**
- * Google Gemini 1.5 Flash API Caller (Calculates calories, macros, price, description & visual prompt)
+ * Robust Google Gemini API caller with multi-model failover
  */
 async function callGeminiAPI(dishName, apiKey) {
   const prompt = `You are an expert executive chef and master food scientist.
@@ -198,32 +160,44 @@ Provide exact nutritional energy, macros, category, and restaurant menu specific
   "spiceLevel": (integer 1 for mild, 2 for medium, 3 for hot),
   "price": (integer estimated price in INR ₹ between 60 and 450),
   "description": "(enticing, appetizing 2-sentence restaurant menu description)",
-  "visualPrompt": "(detailed 1-sentence prompt for photo generation of this exact dish with garnish and plating style)"
+  "visualPrompt": "(detailed 1-sentence visual description of this exact plated dish for photorealistic culinary food rendering)"
 }
 Output ONLY raw JSON, no markdown backticks.`;
 
   const keyToUse = apiKey || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(keyToUse)}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': keyToUse,
-    },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-    }),
-  });
+  if (!keyToUse) throw new Error('No Gemini API key provided.');
 
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData.error?.message || `Gemini API error (${response.status})`);
+  const geminiModels = ['gemini-flash-latest', 'gemini-2.5-flash-lite', 'gemini-pro-latest'];
+
+  for (const model of geminiModels) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(keyToUse)}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': keyToUse,
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (text) {
+          text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(text);
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.warn(`Gemini model ${model} attempt notice:`, err.message);
+    }
   }
 
-  const data = await response.json();
-  let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-  text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-  return JSON.parse(text);
+  throw new Error('Gemini API call could not be completed at this time.');
 }
 
 /**
@@ -259,13 +233,13 @@ function callBuiltinEngine(dishName) {
     spiceLevel: match.spiceLevel,
     price: match.basePrice,
     description: typeof match.desc === 'function' ? match.desc(query) : match.desc,
-    visualPrompt: `gourmet restaurant food photography of authentic ${query}, fine dining presentation, 4k ultra high resolution`,
+    visualPrompt: `authentic ${query} fine dining restaurant presentation`,
   };
 }
 
 /**
  * Main Gemini AI Profile Dispatcher
- * Generates 100% dynamic AI images directly via Gemini AI pipeline
+ * Pure dynamic AI image generation & precise calorie calculation
  */
 export const generateDishAIProfile = async (dishName, customApiKey = '') => {
   const query = (dishName || '').trim();
@@ -289,12 +263,12 @@ export const generateDishAIProfile = async (dishName, customApiKey = '') => {
       result = callBuiltinEngine(query);
     }
   } catch (err) {
-    console.warn(`Gemini API call notice, falling back to built-in culinary engine:`, err.message);
+    console.warn(`Falling back to built-in culinary science engine:`, err.message);
     result = callBuiltinEngine(query);
   }
 
-  // Generate image using Gemini AI Model
-  const dishImage = await generateGeminiFoodImage(query, result.visualPrompt, activeKey);
+  // Generate 100% dynamic AI image
+  const dishImage = generateDynamicAIFoodImage(query, result.visualPrompt);
 
   return {
     name: query,

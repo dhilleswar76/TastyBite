@@ -158,6 +158,38 @@ function CheckoutModal() {
     }
   };
 
+  const handleShareWhatsAppReceipt = (order) => {
+    if (!order) return;
+    const phone = order.customer?.phone || formData.phone;
+    const formattedDate = new Date().toLocaleString();
+    const itemsText = order.items
+      ?.map((it) => `• ${it.quantity}x ${it.name} - ₹${it.price * it.quantity}`)
+      .join('\n');
+
+    const message = `🍽️ *TASTYBITE FINE DINING - TAX INVOICE* 🍽️
+*Order Number:* ${order.orderNumber}
+*Type:* ${order.customer?.orderType === 'dine-in' ? `Dine-In (Table #${order.customer?.tableNumber})` : order.customer?.orderType === 'takeaway' ? 'Takeaway' : 'Home Delivery'}
+*Date & Time:* ${formattedDate}
+*Customer:* ${order.customer?.name}
+
+*ITEMS:*
+${itemsText}
+
+*Subtotal:* ₹${order.pricing?.subtotal}
+*GST (5%):* ₹${order.pricing?.tax}
+${order.pricing?.discount ? `*Discount:* -₹${order.pricing?.discount}\n` : ''}*GRAND TOTAL:* ₹${order.pricing?.totalAmount}
+*Payment:* ${(order.payment?.status || 'PAID').toUpperCase()} via ${(order.payment?.method || 'ONLINE').toUpperCase()}
+
+Thank you for dining with TastyBite! ✨`;
+
+    let cleanDigits = phone ? phone.replace(/[^0-9]/g, '') : '';
+    if (cleanDigits.length === 10) cleanDigits = `91${cleanDigits}`;
+    const url = cleanDigits
+      ? `https://api.whatsapp.com/send?phone=${cleanDigits}&text=${encodeURIComponent(message)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="checkout-modal-overlay" onClick={handleClose}>
       <div
@@ -223,6 +255,14 @@ function CheckoutModal() {
             </div>
 
             <div className="order-success-actions">
+              <button
+                type="button"
+                className="btn-whatsapp-bill"
+                onClick={() => handleShareWhatsAppReceipt(placedOrder)}
+                style={{ background: '#25d366', color: '#fff', padding: '0.75rem 1.2rem', borderRadius: '50px', fontWeight: 800, border: 'none', cursor: 'pointer' }}
+              >
+                📲 Send Receipt on WhatsApp
+              </button>
               <button
                 className="track-live-btn"
                 onClick={() => {

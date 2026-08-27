@@ -291,6 +291,12 @@ function AdminDashboard() {
       setOrders((prev) => [createdOrder, ...prev]);
       setGeneratedBillOrder(createdOrder);
       showNotification(`🎉 Walk-in Bill Generated for ${orderNumber} (₹${posGrandTotal.toLocaleString()})! 🧾`, 'success');
+
+      // Automatically launch WhatsApp bill if phone is entered
+      if (posCustomerPhone && posCustomerPhone.trim()) {
+        handleShareWhatsAppReceipt(createdOrder, posCustomerPhone.trim());
+      }
+
       handlePosClearCart();
     } catch (err) {
       showNotification(err.message || 'Failed to generate order bill.', 'error');
@@ -299,9 +305,9 @@ function AdminDashboard() {
     }
   };
 
-  const handleShareWhatsAppReceipt = (order) => {
+  const handleShareWhatsAppReceipt = (order, customPhone) => {
     if (!order) return;
-    const phone = order.customer?.phone || posCustomerPhone;
+    const phone = customPhone || order.customer?.phone || posCustomerPhone;
     const formattedDate = new Date().toLocaleString();
     const itemsText = order.items
       ?.map((it) => `• ${it.quantity}x ${it.name} - ₹${it.price * it.quantity}`)
@@ -311,7 +317,7 @@ function AdminDashboard() {
 *Order Number:* ${order.orderNumber}
 *Type:* ${order.customer?.orderType === 'dine-in' ? `Dine-In (Table #${order.customer?.tableNumber})` : 'Takeaway Parcel'}
 *Date & Time:* ${formattedDate}
-*Guest:* ${order.customer?.name}
+*Guest:* ${order.customer?.name || 'Walk-in Guest'}
 
 *ITEMS:*
 ${itemsText}
@@ -319,12 +325,17 @@ ${itemsText}
 *Subtotal:* ₹${order.pricing?.subtotal}
 *GST (5%):* ₹${order.pricing?.tax}
 ${order.pricing?.discount ? `*Discount:* -₹${order.pricing?.discount}\n` : ''}*GRAND TOTAL:* ₹${order.pricing?.totalAmount}
-*Payment Status:* ${order.payment?.status?.toUpperCase()} via ${order.payment?.method?.toUpperCase() || 'CASH'}
+*Payment Status:* ${(order.payment?.status || 'PAID').toUpperCase()} via ${(order.payment?.method || 'CASH').toUpperCase()}
 
 Thank you for dining with TastyBite! ✨`;
 
-    const cleanDigits = phone ? phone.replace(/[^0-9]/g, '') : '';
-    const url = `https://wa.me/${cleanDigits ? `91${cleanDigits}` : ''}?text=${encodeURIComponent(message)}`;
+    let cleanDigits = phone ? phone.replace(/[^0-9]/g, '') : '';
+    if (cleanDigits.length === 10) {
+      cleanDigits = `91${cleanDigits}`;
+    }
+    const url = cleanDigits
+      ? `https://api.whatsapp.com/send?phone=${cleanDigits}&text=${encodeURIComponent(message)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
 
