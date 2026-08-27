@@ -6,7 +6,7 @@ const AMBIANCE_SPACES = [
     title: 'Rooftop Starlight Terrace',
     tag: '🌌 Outdoor Sky Dining',
     description: 'Breathtaking 360° panoramic city skyline views under romantic fairy lights and gentle evening breezes.',
-    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&auto=format&fit=crop&q=85',
+    image: '/pictures-restaurant/rooftop-terrace.webp',
     features: ['Open-air dining', 'Live acoustic music', 'Stargazing setup', 'Heat lamps in winter'],
   },
   {
@@ -14,7 +14,7 @@ const AMBIANCE_SPACES = [
     title: 'Royal Velvet Indoor Lounge',
     tag: '🛋️ Luxury Fine Dining',
     description: 'Rich amber mood lighting, handcrafted leather booths, and curated soft jazz for intimate conversations.',
-    image: 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=1200&auto=format&fit=crop&q=85',
+    image: '/pictures-restaurant/indoor-lounge.webp',
     features: ['Plush curved booths', 'Acoustic soundproofing', 'Temperature controlled', 'Curated wine wall'],
   },
   {
@@ -22,7 +22,7 @@ const AMBIANCE_SPACES = [
     title: 'Open Tandoor & Live Kitchen',
     tag: '👨‍🍳 Culinary Theatrics',
     description: 'Watch master chefs roast kebabs in clay tandoors and flambé artisanal wok delicacies live.',
-    image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&auto=format&fit=crop&q=85',
+    image: '/pictures-restaurant/live-kitchen.webp',
     features: ['Chef interactive table', 'Live copper tandoors', 'Fresh bakery station', 'Tasting menu counter'],
   },
   {
@@ -30,7 +30,7 @@ const AMBIANCE_SPACES = [
     title: 'Imperial Private VIP Suite',
     tag: '👑 Private Celebrations',
     description: 'Exquisite private dining salon with crystal chandelier, dedicated butler service, and custom menus.',
-    image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1200&auto=format&fit=crop&q=85',
+    image: '/pictures-restaurant/vip-private-suite.webp',
     features: ['Private butler', 'Custom playlist control', 'Up to 24 guests', 'Dedicated bar station'],
   },
 ];

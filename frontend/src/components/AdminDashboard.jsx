@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { orderAPI, reservationAPI, menuAPI, contactAPI, eventAPI, reviewAPI } from '../services/api';
 import { menuItems as fallbackMenu } from '../data/menuData';
+import { RESTAURANT_FOOD_ASSETS, smartMatchDishImage } from '../utils/foodAssets';
+import { AI_PROVIDERS, generateDishAIProfile } from '../utils/aiDishGenerator';
 
 const PRESET_ADDONS = [
   { id: 'cheese', name: 'Extra Melted Cheese', price: 40, icon: '🧀' },
@@ -43,6 +45,14 @@ function AdminDashboard() {
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [editingMenuItem, setEditingMenuItem] = useState(null);
   const [newAddon, setNewAddon] = useState({ name: '', price: '', icon: '✨' });
+  const [showFoodAssetLibrary, setShowFoodAssetLibrary] = useState(false);
+  const [imageUploadStatus, setImageUploadStatus] = useState('');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [selectedAIProvider, setSelectedAIProvider] = useState(() => localStorage.getItem('tastybite_ai_provider') || 'builtin');
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('tastybite_gemini_key') || '');
+  const [openaiApiKey, setOpenaiApiKey] = useState(() => localStorage.getItem('tastybite_openai_key') || '');
+  const [showAISettings, setShowAISettings] = useState(false);
+  const fileInputRef = useRef(null);
   const [menuFormData, setMenuFormData] = useState({
     name: '',
     description: '',
@@ -66,6 +76,20 @@ function AdminDashboard() {
     ],
     allowsNotes: true,
   });
+  // POS Walk-in Terminal & Billing States
+  const [posOrderType, setPosOrderType] = useState('dine-in'); // 'dine-in' | 'takeaway'
+  const [posTableNumber, setPosTableNumber] = useState('1');
+  const [posCustomerName, setPosCustomerName] = useState('Walk-in Guest');
+  const [posCustomerPhone, setPosCustomerPhone] = useState('');
+  const [posPaymentMethod, setPosPaymentMethod] = useState('cash'); // 'cash' | 'upi' | 'card'
+  const [posPaymentStatus, setPosPaymentStatus] = useState('paid'); // 'paid' | 'pending'
+  const [posCart, setPosCart] = useState([]); // [{ id, menuItemId, name, price, quantity, tag, image, notes }]
+  const [posDiscountPercent, setPosDiscountPercent] = useState(0);
+  const [posCategoryFilter, setPosCategoryFilter] = useState('all');
+  const [posSearchTerm, setPosSearchTerm] = useState('');
+  const [posSubmitting, setPosSubmitting] = useState(false);
+  const [generatedBillOrder, setGeneratedBillOrder] = useState(null); // stores order for Bill Modal
+
   const [actionFeedback, setActionFeedback] = useState(null);
 
   const categories = [
@@ -82,6 +106,255 @@ function AdminDashboard() {
   const showNotification = (msg, type = 'success') => {
     setActionFeedback({ msg, type });
     setTimeout(() => setActionFeedback(null), 3500);
+  };
+
+  // Dish Photo Handlers: Upload from Device / Phone
+  const handleDishFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 8 * 1024 * 1024) {
+      showNotification('Please select an image under 8MB', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height *= maxDim / width;
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width *= maxDim / height;
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        setMenuFormData((prev) => ({ ...prev, image: compressedDataUrl }));
+        setImageUploadStatus(`Photo uploaded from device (${file.name})`);
+        showNotification(`Dish photo "${file.name}" uploaded successfully! 📸`, 'success');
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // 100% Smart Match Food Photo based on Dish Name
+  const handleAutoMatchDishImage = () => {
+    if (!menuFormData.name.trim()) {
+      showNotification('Please enter a Dish Name first to auto-match.', 'error');
+      return;
+    }
+    const matchedFile = smartMatchDishImage(menuFormData.name, menuFormData.category, menuFormData.tag);
+    const matchedAsset = RESTAURANT_FOOD_ASSETS.find((a) => a.file === matchedFile);
+    setMenuFormData((prev) => ({ ...prev, image: matchedFile }));
+    setImageUploadStatus(`Matched with "${matchedAsset?.name || 'Restaurant'}" photo`);
+    showNotification(`✨ 100% matched with "${matchedAsset?.name}" asset!`, 'success');
+  };
+
+  // Select Photo from Authentic Restaurant Library
+  const handleSelectFromLibrary = (asset) => {
+    setMenuFormData((prev) => ({ ...prev, image: asset.file }));
+    setShowFoodAssetLibrary(false);
+    setImageUploadStatus(`Selected "${asset.name}" photo`);
+    showNotification(`Selected "${asset.name}" photo from library!`, 'success');
+  };
+
+  // AI Model Integration: Generates 100% accurate food photo, energy calories, macros & description
+  const handleAIGenerateDish = async () => {
+    if (!menuFormData.name.trim()) {
+      showNotification('Please enter a Dish Name first to auto-generate with AI.', 'error');
+      return;
+    }
+    setIsGeneratingAI(true);
+    const activeKey = selectedAIProvider === 'gemini' ? geminiApiKey : selectedAIProvider === 'openai' ? openaiApiKey : '';
+    try {
+      const profile = await generateDishAIProfile(menuFormData.name, selectedAIProvider, activeKey);
+      setMenuFormData((prev) => ({
+        ...prev,
+        description: profile.description,
+        price: prev.price || profile.price,
+        category: profile.category,
+        tag: profile.tag,
+        spiceLevel: profile.spiceLevel,
+        calories: profile.calories,
+        protein: profile.protein,
+        carbs: profile.carbs,
+        fats: profile.fats,
+        image: profile.image,
+      }));
+      const providerLabel = AI_PROVIDERS.find((p) => p.id === selectedAIProvider)?.name || 'AI';
+      setImageUploadStatus(`✨ ${profile.calories} kcal calculated (${providerLabel})`);
+      showNotification(`✨ ${providerLabel} generated 100% matched food photo & calculated ${profile.calories} kcal! 🤖`, 'success');
+    } catch (err) {
+      showNotification(err.message || 'AI Generation failed. Please try again.', 'error');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  // POS Math Calculations
+  const posSubtotal = posCart.reduce((sum, it) => sum + it.price * it.quantity, 0);
+  const posDiscountAmount = Math.round((posSubtotal * posDiscountPercent) / 100);
+  const posGstTax = Math.round((posSubtotal - posDiscountAmount) * 0.05); // 5% Standard Restaurant GST
+  const posGrandTotal = Math.max(0, posSubtotal - posDiscountAmount + posGstTax);
+
+  // POS Cart Handlers
+  const handlePosAddToCart = (item) => {
+    const itemId = item._id || item.id;
+    setPosCart((prev) => {
+      const exists = prev.find((it) => it.id === itemId);
+      if (exists) {
+        return prev.map((it) => (it.id === itemId ? { ...it, quantity: it.quantity + 1 } : it));
+      }
+      return [
+        ...prev,
+        {
+          id: itemId,
+          menuItemId: item._id,
+          name: item.name,
+          price: item.price,
+          quantity: 1,
+          tag: item.tag || 'Veg',
+          image: item.image || '/pictures-restaurant/restaurant-logo.webp',
+          notes: '',
+        },
+      ];
+    });
+  };
+
+  const handlePosUpdateQty = (itemId, delta) => {
+    setPosCart((prev) =>
+      prev
+        .map((it) => {
+          if (it.id === itemId) {
+            const newQty = it.quantity + delta;
+            return newQty > 0 ? { ...it, quantity: newQty } : null;
+          }
+          return it;
+        })
+        .filter(Boolean)
+    );
+  };
+
+  const handlePosRemoveItem = (itemId) => {
+    setPosCart((prev) => prev.filter((it) => it.id !== itemId));
+  };
+
+  const handlePosClearCart = () => {
+    setPosCart([]);
+    setPosDiscountPercent(0);
+    setPosCustomerName('Walk-in Guest');
+    setPosCustomerPhone('');
+  };
+
+  // Submit POS Walk-In Order & Generate Tax Invoice Bill
+  const handlePosSubmitOrder = async () => {
+    if (posCart.length === 0) {
+      showNotification('Please add at least one dish to the POS order cart.', 'error');
+      return;
+    }
+
+    setPosSubmitting(true);
+    const orderNumber = `TB-POS-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const orderPayload = {
+      orderNumber,
+      customer: {
+        name: posCustomerName.trim() || 'Walk-in Guest',
+        email: 'walkin@tastybite.local',
+        phone: posCustomerPhone.trim() || '9999999999',
+        orderType: posOrderType,
+        tableNumber: posOrderType === 'dine-in' ? String(posTableNumber) : '',
+        notes: `Offline Walk-In Order (${posPaymentMethod.toUpperCase()})`,
+      },
+      items: posCart.map((it) => ({
+        menuItemId: it.menuItemId || undefined,
+        name: it.name,
+        price: it.price,
+        quantity: it.quantity,
+        image: it.image,
+        tag: it.tag,
+        spiceLevel: 'Default',
+        cookingNotes: it.notes || '',
+      })),
+      pricing: {
+        subtotal: posSubtotal,
+        tax: posGstTax,
+        deliveryFee: 0,
+        discount: posDiscountAmount,
+        totalAmount: posGrandTotal,
+      },
+      payment: {
+        method: posPaymentMethod === 'cash' ? 'cod' : posPaymentMethod,
+        status: posPaymentStatus,
+      },
+      status: 'confirmed',
+    };
+
+    try {
+      let createdOrder = orderPayload;
+      try {
+        const res = await orderAPI.create(orderPayload);
+        if (res.data) createdOrder = res.data;
+      } catch (e) {
+        console.warn('Backend orderAPI save offline fallback:', e.message);
+      }
+
+      setOrders((prev) => [createdOrder, ...prev]);
+      setGeneratedBillOrder(createdOrder);
+      showNotification(`🎉 Walk-in Bill Generated for ${orderNumber} (₹${posGrandTotal.toLocaleString()})! 🧾`, 'success');
+      handlePosClearCart();
+    } catch (err) {
+      showNotification(err.message || 'Failed to generate order bill.', 'error');
+    } finally {
+      setPosSubmitting(false);
+    }
+  };
+
+  const handleShareWhatsAppReceipt = (order) => {
+    if (!order) return;
+    const phone = order.customer?.phone || posCustomerPhone;
+    const formattedDate = new Date().toLocaleString();
+    const itemsText = order.items
+      ?.map((it) => `• ${it.quantity}x ${it.name} - ₹${it.price * it.quantity}`)
+      .join('\n');
+
+    const message = `🍽️ *TASTYBITE FINE DINING - TAX INVOICE* 🍽️
+*Order Number:* ${order.orderNumber}
+*Type:* ${order.customer?.orderType === 'dine-in' ? `Dine-In (Table #${order.customer?.tableNumber})` : 'Takeaway Parcel'}
+*Date & Time:* ${formattedDate}
+*Guest:* ${order.customer?.name}
+
+*ITEMS:*
+${itemsText}
+
+*Subtotal:* ₹${order.pricing?.subtotal}
+*GST (5%):* ₹${order.pricing?.tax}
+${order.pricing?.discount ? `*Discount:* -₹${order.pricing?.discount}\n` : ''}*GRAND TOTAL:* ₹${order.pricing?.totalAmount}
+*Payment Status:* ${order.payment?.status?.toUpperCase()} via ${order.payment?.method?.toUpperCase() || 'CASH'}
+
+Thank you for dining with TastyBite! ✨`;
+
+    const cleanDigits = phone ? phone.replace(/[^0-9]/g, '') : '';
+    const url = `https://wa.me/${cleanDigits ? `91${cleanDigits}` : ''}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
   };
 
   // Fetch all admin data
@@ -193,6 +466,8 @@ function AdminDashboard() {
   const handleOpenAddMenuModal = () => {
     setEditingMenuItem(null);
     setNewAddon({ name: '', price: '', icon: '✨' });
+    setImageUploadStatus('');
+    setShowFoodAssetLibrary(false);
     setMenuFormData({
       name: '',
       description: '',
@@ -222,6 +497,8 @@ function AdminDashboard() {
   const handleOpenEditMenuModal = (item) => {
     setEditingMenuItem(item);
     setNewAddon({ name: '', price: '', icon: '✨' });
+    setImageUploadStatus('');
+    setShowFoodAssetLibrary(false);
     const isBeverage = item.category === 'beverages';
     const isDessert = item.category === 'desserts';
     const isBread = item.category === 'indian-breads';
@@ -422,6 +699,15 @@ function AdminDashboard() {
     return matchesCat && matchesSearch;
   });
 
+  const posFilteredMenuItems = menuItems.filter((item) => {
+    const matchesCat = posCategoryFilter === 'all' || item.category === posCategoryFilter;
+    const matchesSearch =
+      !posSearchTerm.trim() ||
+      item.name.toLowerCase().includes(posSearchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(posSearchTerm.toLowerCase());
+    return matchesCat && matchesSearch;
+  });
+
   // Calculate quick stats & analytics
   const totalRevenue = orders.reduce((acc, o) => acc + (o.pricing?.totalAmount || 0), 0);
   const pendingOrdersCount = orders.filter(
@@ -446,7 +732,7 @@ function AdminDashboard() {
       <header className="admin-header">
         <div className="admin-header-brand">
           <Link to="/" className="admin-logo">
-            <img src="/pictures-restaurant/restaurant-logo.png" alt="TastyBite" />
+            <img src="/pictures-restaurant/restaurant-logo.webp" alt="TastyBite" />
             <span>TastyBite <strong>Operations Control</strong></span>
           </Link>
           <span className="admin-badge-live">Live Kitchen &amp; Floor</span>
@@ -507,6 +793,12 @@ function AdminDashboard() {
       {/* Admin Navigation Tabs */}
       <div className="admin-tabs-bar">
         <button
+          className={`admin-tab-btn ${activeTab === 'pos' ? 'active' : ''}`}
+          onClick={() => setActiveTab('pos')}
+        >
+          🛒 Walk-In POS &amp; Billing
+        </button>
+        <button
           className={`admin-tab-btn ${activeTab === 'kds' ? 'active' : ''}`}
           onClick={() => setActiveTab('kds')}
         >
@@ -559,6 +851,295 @@ function AdminDashboard() {
           </div>
         ) : (
           <>
+            {/* --- TAB 0: WALK-IN POS & BILLING TERMINAL --- */}
+            {activeTab === 'pos' && (
+              <div className="pos-terminal-container">
+                {/* Left: Quick-Tap Menu Browser */}
+                <div className="pos-menu-panel">
+                  <div className="pos-menu-header">
+                    <div className="pos-search-box">
+                      <input
+                        type="text"
+                        placeholder="🔍 Search dishes (e.g. Biryani, Naan, Paneer, Lassi)..."
+                        value={posSearchTerm}
+                        onChange={(e) => setPosSearchTerm(e.target.value)}
+                      />
+                      {posSearchTerm && (
+                        <button className="clear-search-btn" onClick={() => setPosSearchTerm('')}>&times;</button>
+                      )}
+                    </div>
+
+                    <div className="pos-category-tabs">
+                      {categories.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          className={`pos-cat-chip ${posCategoryFilter === c.id ? 'active' : ''}`}
+                          onClick={() => setPosCategoryFilter(c.id)}
+                        >
+                          {c.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pos-dishes-grid">
+                    {posFilteredMenuItems.map((dish) => {
+                      const dishId = dish._id || dish.id;
+                      const cartItem = posCart.find((it) => it.id === dishId);
+
+                      return (
+                        <div key={dishId} className={`pos-dish-card ${cartItem ? 'in-cart' : ''}`}>
+                          <div className="pos-dish-thumb-wrap">
+                            <img src={dish.image || '/pictures-restaurant/restaurant-logo.webp'} alt={dish.name} />
+                            <span className={`pos-tag-pill ${dish.tag === 'Veg' ? 'veg' : 'non-veg'}`}>
+                              {dish.tag === 'Veg' ? '🟢' : '🔴'}
+                            </span>
+                            {dish.calories && <span className="pos-cal-pill">{dish.calories} kcal</span>}
+                          </div>
+
+                          <div className="pos-dish-info">
+                            <h4 className="pos-dish-name">{dish.name}</h4>
+                            <span className="pos-dish-price">₹{dish.price}</span>
+                          </div>
+
+                          <div className="pos-dish-action">
+                            {cartItem ? (
+                              <div className="pos-stepper-control">
+                                <button type="button" onClick={() => handlePosUpdateQty(dishId, -1)}>-</button>
+                                <span className="pos-stepper-qty">{cartItem.quantity}</span>
+                                <button type="button" onClick={() => handlePosUpdateQty(dishId, 1)}>+</button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="pos-add-btn"
+                                onClick={() => handlePosAddToCart(dish)}
+                              >
+                                + Add
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Right: Live POS Bill & Ticket Terminal */}
+                <div className="pos-billing-panel">
+                  <div className="pos-bill-card">
+                    {/* Header: Dine-in vs Takeaway */}
+                    <div className="pos-bill-header">
+                      <div className="pos-type-toggle">
+                        <button
+                          type="button"
+                          className={`pos-type-btn ${posOrderType === 'dine-in' ? 'active' : ''}`}
+                          onClick={() => setPosOrderType('dine-in')}
+                        >
+                          🍽️ Dine-In
+                        </button>
+                        <button
+                          type="button"
+                          className={`pos-type-btn ${posOrderType === 'takeaway' ? 'active' : ''}`}
+                          onClick={() => setPosOrderType('takeaway')}
+                        >
+                          🛍️ Takeaway
+                        </button>
+                      </div>
+
+                      {posOrderType === 'dine-in' && (
+                        <div className="pos-table-select-row">
+                          <label>Table:</label>
+                          <select
+                            value={posTableNumber}
+                            onChange={(e) => setPosTableNumber(e.target.value)}
+                            className="pos-table-dropdown"
+                          >
+                            {[...Array(20)].map((_, i) => (
+                              <option key={i + 1} value={i + 1}>
+                                Table #{i + 1}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Customer Inputs */}
+                    <div className="pos-guest-row">
+                      <input
+                        type="text"
+                        placeholder="Guest Name (e.g. Anand Mahindra)"
+                        value={posCustomerName}
+                        onChange={(e) => setPosCustomerName(e.target.value)}
+                        className="pos-guest-input"
+                      />
+                      <input
+                        type="tel"
+                        placeholder="Phone (for WhatsApp Bill)"
+                        value={posCustomerPhone}
+                        onChange={(e) => setPosCustomerPhone(e.target.value)}
+                        className="pos-guest-input phone"
+                      />
+                    </div>
+
+                    {/* Cart Items List */}
+                    <div className="pos-cart-items-container">
+                      {posCart.length === 0 ? (
+                        <div className="pos-empty-cart">
+                          <span>🛒</span>
+                          <p>POS Cart is empty. Tap any dish on the left to add items.</p>
+                        </div>
+                      ) : (
+                        posCart.map((it) => (
+                          <div key={it.id} className="pos-cart-item-row">
+                            <div className="pos-item-details">
+                              <span className="pos-item-title">{it.name}</span>
+                              <span className="pos-item-sub">₹{it.price} each</span>
+                              <input
+                                type="text"
+                                placeholder="Kitchen note (e.g. Less spicy)..."
+                                value={it.notes}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setPosCart((prev) =>
+                                    prev.map((c) => (c.id === it.id ? { ...c, notes: val } : c))
+                                  );
+                                }}
+                                className="pos-item-note-input"
+                              />
+                            </div>
+
+                            <div className="pos-item-stepper">
+                              <button type="button" onClick={() => handlePosUpdateQty(it.id, -1)}>-</button>
+                              <span>{it.quantity}</span>
+                              <button type="button" onClick={() => handlePosUpdateQty(it.id, 1)}>+</button>
+                            </div>
+
+                            <strong className="pos-item-total">₹{it.price * it.quantity}</strong>
+
+                            <button
+                              type="button"
+                              className="pos-item-del-btn"
+                              onClick={() => handlePosRemoveItem(it.id)}
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Calculation Summary */}
+                    <div className="pos-summary-box">
+                      <div className="pos-calc-row">
+                        <span>Items Subtotal:</span>
+                        <strong>₹{posSubtotal}</strong>
+                      </div>
+
+                      {/* Discount Options */}
+                      <div className="pos-discount-row">
+                        <span>Discount:</span>
+                        <div className="pos-discount-pills">
+                          {[0, 5, 10, 15, 20].map((d) => (
+                            <button
+                              key={d}
+                              type="button"
+                              className={`pos-disc-btn ${posDiscountPercent === d ? 'active' : ''}`}
+                              onClick={() => setPosDiscountPercent(d)}
+                            >
+                              {d === 0 ? '0%' : `${d}%`}
+                            </button>
+                          ))}
+                        </div>
+                        {posDiscountAmount > 0 && <span className="disc-val">-₹{posDiscountAmount}</span>}
+                      </div>
+
+                      <div className="pos-calc-row">
+                        <span>GST (5% Tax):</span>
+                        <span>₹{posGstTax}</span>
+                      </div>
+
+                      <div className="pos-calc-row grand-total">
+                        <span>Net Grand Total:</span>
+                        <strong className="total-val">₹{posGrandTotal.toLocaleString()}</strong>
+                      </div>
+                    </div>
+
+                    {/* Payment Mode Selector */}
+                    <div className="pos-payment-section">
+                      <label>Payment Mode:</label>
+                      <div className="pos-payment-grid">
+                        <button
+                          type="button"
+                          className={`pos-pay-btn ${posPaymentMethod === 'cash' ? 'active' : ''}`}
+                          onClick={() => setPosPaymentMethod('cash')}
+                        >
+                          💵 Cash
+                        </button>
+                        <button
+                          type="button"
+                          className={`pos-pay-btn ${posPaymentMethod === 'upi' ? 'active' : ''}`}
+                          onClick={() => setPosPaymentMethod('upi')}
+                        >
+                          📱 UPI / QR
+                        </button>
+                        <button
+                          type="button"
+                          className={`pos-pay-btn ${posPaymentMethod === 'card' ? 'active' : ''}`}
+                          onClick={() => setPosPaymentMethod('card')}
+                        >
+                          💳 Card
+                        </button>
+                      </div>
+
+                      <div className="pos-pay-status-row">
+                        <label>Payment Status:</label>
+                        <div className="status-toggle-pill">
+                          <button
+                            type="button"
+                            className={posPaymentStatus === 'paid' ? 'active' : ''}
+                            onClick={() => setPosPaymentStatus('paid')}
+                          >
+                            ✅ Paid (Tax Invoice)
+                          </button>
+                          <button
+                            type="button"
+                            className={posPaymentStatus === 'pending' ? 'active' : ''}
+                            onClick={() => setPosPaymentStatus('pending')}
+                          >
+                            ⏳ Pay Later
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action CTAs */}
+                    <div className="pos-actions-row">
+                      <button
+                        type="button"
+                        className="btn-pos-clear"
+                        onClick={handlePosClearCart}
+                        disabled={posCart.length === 0}
+                      >
+                        🧹 Clear
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn-pos-checkout"
+                        onClick={handlePosSubmitOrder}
+                        disabled={posCart.length === 0 || posSubmitting}
+                      >
+                        {posSubmitting ? 'Generating Bill...' : `🧾 Place Order & Generate Bill (₹${posGrandTotal.toLocaleString()})`}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* --- TAB 1: KITCHEN DISPLAY SYSTEM (KDS) --- */}
             {activeTab === 'kds' && (
               <div className="kds-dashboard-board">
@@ -734,7 +1315,7 @@ function AdminDashboard() {
 
                   <div className="qr-preview-card" id="printable-qr">
                     <div className="qr-placard-inner">
-                      <img src="/pictures-restaurant/restaurant-logo.png" alt="TastyBite" className="qr-brand-logo" />
+                      <img src="/pictures-restaurant/restaurant-logo.webp" alt="TastyBite" className="qr-brand-logo" />
                       <h3>TastyBite Fine Dining</h3>
                       <div className="table-badge-big">TABLE #{selectedTableForQR}</div>
                       <img src={qrImageSrc} alt={`Table ${selectedTableForQR} QR Code`} className="qr-code-img" />
@@ -1104,7 +1685,7 @@ function AdminDashboard() {
                     return (
                       <div key={itemId} className={`admin-menu-card ${!isAvailable ? 'out-of-stock-card' : ''}`}>
                         <div className="admin-card-img-wrap">
-                          <img src={item.image || '/pictures-restaurant/restaurant-logo.png'} alt={item.name} />
+                          <img src={item.image || '/pictures-restaurant/restaurant-logo.webp'} alt={item.name} />
                           <span className={`dish-tag-badge ${item.tag === 'Veg' ? 'veg' : 'non-veg'}`}>
                             {item.tag === 'Veg' ? '🟢 Veg' : '🔴 Non-Veg'}
                           </span>
@@ -1233,6 +1814,90 @@ function AdminDashboard() {
               <button className="modal-close-x" onClick={() => setShowMenuModal(false)}>&times;</button>
             </div>
 
+            {/* Multi-Provider AI Model Culinary Assistant Bar */}
+            <div className="admin-ai-generator-bar">
+              <div className="ai-bar-top-row">
+                <div className="ai-bar-left">
+                  <div className="ai-title-group">
+                    <span className="ai-badge-chip">🤖 Multi-Provider AI Culinary Engine</span>
+                    <button
+                      type="button"
+                      className="ai-settings-toggle-btn"
+                      onClick={() => setShowAISettings(!showAISettings)}
+                      title="Configure AI Providers & API Keys"
+                    >
+                      ⚙️ {showAISettings ? 'Hide Settings' : 'AI Settings'}
+                    </button>
+                  </div>
+                  <p>Auto-fetches 100% accurate food photo, energy calories (kcal), macros &amp; chef notes for any dish.</p>
+                </div>
+
+                <div className="ai-bar-actions">
+                  {/* Provider Tabs */}
+                  <div className="ai-provider-pill-group">
+                    {AI_PROVIDERS.map((prov) => (
+                      <button
+                        key={prov.id}
+                        type="button"
+                        className={`provider-chip-btn ${selectedAIProvider === prov.id ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelectedAIProvider(prov.id);
+                          localStorage.setItem('tastybite_ai_provider', prov.id);
+                        }}
+                      >
+                        {prov.badge}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn-ai-auto-generate"
+                    onClick={handleAIGenerateDish}
+                    disabled={isGeneratingAI}
+                  >
+                    {isGeneratingAI ? '🧠 Generating with AI...' : '✨ Auto-Generate with AI'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Collapsible AI API Key Settings */}
+              {showAISettings && (
+                <div className="ai-settings-drawer">
+                  <h4>Configure AI API Keys (Optional - Free Built-in works automatically):</h4>
+                  <div className="ai-keys-grid">
+                    <div className="form-group">
+                      <label>Google Gemini API Key (Google AI Studio Free Key)</label>
+                      <input
+                        type="password"
+                        placeholder="AIzaSy..."
+                        value={geminiApiKey}
+                        onChange={(e) => {
+                          setGeminiApiKey(e.target.value);
+                          localStorage.setItem('tastybite_gemini_key', e.target.value);
+                        }}
+                      />
+                      <small className="field-hint">Used when Google Gemini is selected.</small>
+                    </div>
+
+                    <div className="form-group">
+                      <label>OpenAI API Key (Optional)</label>
+                      <input
+                        type="password"
+                        placeholder="sk-proj-..."
+                        value={openaiApiKey}
+                        onChange={(e) => {
+                          setOpenaiApiKey(e.target.value);
+                          localStorage.setItem('tastybite_openai_key', e.target.value);
+                        }}
+                      />
+                      <small className="field-hint">Used when OpenAI GPT-4o-mini is selected.</small>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <form onSubmit={handleSaveMenuItem} className="admin-modal-form">
               <div className="form-row">
                 <div className="form-group">
@@ -1312,15 +1977,109 @@ function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>Image URL / Path *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="/pictures-restaurant/Paneer-Tikka.webp or https://..."
-                  value={menuFormData.image}
-                  onChange={(e) => setMenuFormData({ ...menuFormData, image: e.target.value })}
-                />
+              {/* Dish Photo Studio / Image Picker */}
+              <div className="admin-dish-image-studio">
+                <label className="studio-label">Dish Photo & Image Selection *</label>
+                <div className="dish-image-studio-box">
+                  <div className="dish-image-preview-holder">
+                    <img
+                      src={menuFormData.image || '/pictures-restaurant/restaurant-logo.webp'}
+                      alt="Dish preview"
+                      className="dish-preview-img"
+                    />
+                    <span className="dish-image-type-tag">
+                      {menuFormData.image?.startsWith('data:') ? '📸 Device Upload' : '✨ Library Asset'}
+                    </span>
+                  </div>
+
+                  <div className="dish-image-controls-col">
+                    <div className="dish-image-action-btns">
+                      {/* Upload from Explorer / Phone Albums */}
+                      <button
+                        type="button"
+                        className="btn-image-action upload"
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Upload photo from device file explorer or phone gallery"
+                      >
+                        📁 Upload Photo
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleDishFileUpload}
+                      />
+
+                      {/* 100% Smart Match by Dish Name */}
+                      <button
+                        type="button"
+                        className="btn-image-action match"
+                        onClick={handleAutoMatchDishImage}
+                        title="Auto-match 100% accurate food photo based on the dish name"
+                      >
+                        ✨ 100% Auto-Match
+                      </button>
+
+                      {/* Browse 20+ Restaurant Food Library */}
+                      <button
+                        type="button"
+                        className={`btn-image-action library ${showFoodAssetLibrary ? 'active' : ''}`}
+                        onClick={() => setShowFoodAssetLibrary(!showFoodAssetLibrary)}
+                        title="Browse all authentic restaurant dish assets"
+                      >
+                        🖼️ Food Library ({RESTAURANT_FOOD_ASSETS.length})
+                      </button>
+                    </div>
+
+                    <div className="dish-image-input-manual">
+                      <input
+                        type="text"
+                        required
+                        placeholder="/pictures-restaurant/Paneer-Tikka.webp"
+                        value={menuFormData.image}
+                        onChange={(e) => {
+                          setMenuFormData({ ...menuFormData, image: e.target.value });
+                          setImageUploadStatus('');
+                        }}
+                      />
+                    </div>
+
+                    {imageUploadStatus && (
+                      <span className="image-status-pill">{imageUploadStatus}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Food Asset Library Drawer / Grid */}
+                {showFoodAssetLibrary && (
+                  <div className="food-asset-library-drawer">
+                    <div className="asset-drawer-header">
+                      <span>Tap any dish photo to select ({RESTAURANT_FOOD_ASSETS.length} in library):</span>
+                      <button
+                        type="button"
+                        className="close-drawer-btn"
+                        onClick={() => setShowFoodAssetLibrary(false)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="food-assets-grid">
+                      {RESTAURANT_FOOD_ASSETS.map((asset, aIdx) => (
+                        <button
+                          key={aIdx}
+                          type="button"
+                          className={`food-asset-card ${menuFormData.image === asset.file ? 'selected' : ''}`}
+                          onClick={() => handleSelectFromLibrary(asset)}
+                          title={asset.name}
+                        >
+                          <img src={asset.file} alt={asset.name} className="asset-thumb-img" />
+                          <span className="asset-name-label">{asset.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -1493,6 +2252,149 @@ function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- THERMAL TAX INVOICE RECEIPT MODAL --- */}
+      {generatedBillOrder && (
+        <div className="admin-modal-overlay" onClick={() => setGeneratedBillOrder(null)}>
+          <div className="receipt-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="receipt-actions-bar no-print">
+              <h3>🧾 Bill Generated Successfully!</h3>
+              <div className="receipt-header-btns">
+                <button
+                  type="button"
+                  className="btn-print-bill"
+                  onClick={() => window.print()}
+                >
+                  🖨️ Print Receipt
+                </button>
+                <button
+                  type="button"
+                  className="btn-whatsapp-bill"
+                  onClick={() => handleShareWhatsAppReceipt(generatedBillOrder)}
+                >
+                  📲 WhatsApp Bill
+                </button>
+                <button
+                  type="button"
+                  className="btn-close-receipt"
+                  onClick={() => setGeneratedBillOrder(null)}
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Thermal Receipt */}
+            <div className="thermal-receipt-paper" id="printable-tax-invoice">
+              <div className="receipt-brand-header">
+                <img src="/pictures-restaurant/restaurant-logo.webp" alt="TastyBite" className="receipt-logo" />
+                <h2>TastyBite Fine Dining</h2>
+                <p>Royal Heritage Boulevard, Food Street, Vizag / AP</p>
+                <p>GSTIN: 37AAACT1234F1Z8 | FSSAI: 10123000000000</p>
+                <p>Phone: +91 88856 36899 | contact@tastybite.com</p>
+              </div>
+
+              <div className="receipt-divider">================================</div>
+
+              <div className="receipt-meta-grid">
+                <div><span>Invoice No:</span> <strong>{generatedBillOrder.orderNumber}</strong></div>
+                <div><span>Date &amp; Time:</span> <strong>{new Date().toLocaleString()}</strong></div>
+                <div>
+                  <span>Order Type:</span>{' '}
+                  <strong>
+                    {generatedBillOrder.customer?.orderType === 'dine-in'
+                      ? `DINE-IN (TABLE #${generatedBillOrder.customer?.tableNumber})`
+                      : 'TAKEAWAY PARCEL'}
+                  </strong>
+                </div>
+                <div><span>Guest Name:</span> <strong>{generatedBillOrder.customer?.name}</strong></div>
+                {generatedBillOrder.customer?.phone && (
+                  <div><span>Phone:</span> <strong>{generatedBillOrder.customer?.phone}</strong></div>
+                )}
+                <div><span>Cashier:</span> <strong>Admin Front Desk</strong></div>
+              </div>
+
+              <div className="receipt-divider">--------------------------------</div>
+
+              <table className="receipt-items-table">
+                <thead>
+                  <tr>
+                    <th>Qty</th>
+                    <th>Item Description</th>
+                    <th>Rate</th>
+                    <th style={{ textAlign: 'right' }}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {generatedBillOrder.items?.map((it, idx) => (
+                    <tr key={idx}>
+                      <td>{it.quantity}x</td>
+                      <td>
+                        <strong>{it.name}</strong>
+                        {it.cookingNotes && <small className="receipt-note">({it.cookingNotes})</small>}
+                      </td>
+                      <td>₹{it.price}</td>
+                      <td style={{ textAlign: 'right' }}>₹{it.price * it.quantity}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div className="receipt-divider">--------------------------------</div>
+
+              <div className="receipt-totals-section">
+                <div className="receipt-total-line">
+                  <span>Subtotal:</span>
+                  <span>₹{generatedBillOrder.pricing?.subtotal}</span>
+                </div>
+                {generatedBillOrder.pricing?.discount > 0 && (
+                  <div className="receipt-total-line discount">
+                    <span>Discount:</span>
+                    <span>-₹{generatedBillOrder.pricing?.discount}</span>
+                  </div>
+                )}
+                <div className="receipt-total-line">
+                  <span>CGST (2.5%):</span>
+                  <span>₹{(generatedBillOrder.pricing?.tax / 2).toFixed(2)}</span>
+                </div>
+                <div className="receipt-total-line">
+                  <span>SGST (2.5%):</span>
+                  <span>₹{(generatedBillOrder.pricing?.tax / 2).toFixed(2)}</span>
+                </div>
+                <div className="receipt-divider">================================</div>
+                <div className="receipt-total-line grand">
+                  <span>NET TOTAL PAYABLE:</span>
+                  <span>₹{generatedBillOrder.pricing?.totalAmount?.toLocaleString()}</span>
+                </div>
+                <div className="receipt-divider">================================</div>
+              </div>
+
+              <div className="receipt-payment-stamp">
+                <div className="paid-stamp-box">
+                  <span>PAYMENT {generatedBillOrder.payment?.status?.toUpperCase() || 'PAID'}</span>
+                  <strong>VIA {generatedBillOrder.payment?.method?.toUpperCase() || 'CASH'}</strong>
+                </div>
+              </div>
+
+              <div className="receipt-footer-notes">
+                <p>✨ Thank you for choosing TastyBite! ✨</p>
+                <p>Visit again &amp; enjoy authentic royal flavors.</p>
+                <p className="powered-by">TastyBite MERN Restaurant POS v2.0</p>
+              </div>
+            </div>
+
+            <div className="receipt-bottom-actions no-print">
+              <button
+                type="button"
+                className="btn-start-new-pos"
+                onClick={() => setGeneratedBillOrder(null)}
+              >
+                + Start New Walk-In Order
+              </button>
+            </div>
           </div>
         </div>
       )}
