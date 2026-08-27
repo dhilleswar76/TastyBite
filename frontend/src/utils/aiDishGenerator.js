@@ -215,17 +215,55 @@ const CULINARY_KNOWLEDGE_BASE = [
 ];
 
 /**
- * Generates photorealistic AI food photography URL
+ * Generates dish image directly using Google Gemini / Imagen 3 AI Model
  */
-export const generateAIFoodImage = (dishName) => {
-  const cleanName = dishName.trim();
+export async function generateGeminiFoodImage(dishName, apiKey) {
+  const cleanName = (dishName || '').trim();
   if (!cleanName) return '/pictures-restaurant/restaurant-logo.webp';
-  const aiPrompt = `authentic delicious ${cleanName} fine dining restaurant presentation, appetizing culinary food photography, 4k ultra high resolution, warm restaurant mood lighting, master chef plating`;
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(aiPrompt)}?width=800&height=600&nologo=true`;
-};
+
+  const keyToUse = apiKey || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
+  if (!keyToUse) return null;
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${encodeURIComponent(keyToUse)}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': keyToUse,
+      },
+      body: JSON.stringify({
+        instances: [
+          {
+            prompt: `gourmet restaurant food photography of authentic ${cleanName}, fine dining plating, appetizing culinary presentation, 4k ultra high resolution, warm lighting, centered dish on luxury tableware`,
+          },
+        ],
+        parameters: {
+          sampleCount: 1,
+          aspectRatio: '4:3',
+          outputOptions: {
+            mimeType: 'image/jpeg',
+          },
+        },
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const base64Data = data.predictions?.[0]?.bytesBase64Encoded;
+      if (base64Data) {
+        return `data:image/jpeg;base64,${base64Data}`;
+      }
+    }
+  } catch (err) {
+    console.warn('Gemini Imagen 3 image synthesis notice, using authentic local asset fallback:', err.message);
+  }
+
+  return null;
+}
 
 /**
- * Google Gemini 1.5 Flash API Caller
+ * Google Gemini 1.5 Flash API Caller (Calculates calories, macros, price & description)
  */
 async function callGeminiAPI(dishName, apiKey) {
   const prompt = `You are an expert executive chef and master food scientist.
@@ -333,8 +371,15 @@ export const generateDishAIProfile = async (dishName, customApiKey = '') => {
     result = callBuiltinEngine(query);
   }
 
-  // 100% Guaranteed authentic matching restaurant food photo
-  const localMatch = smartMatchDishImage(query, result.category, result.tag);
+  // Generate image using Gemini Imagen 3 with fallback to authentic local assets
+  let dishImage = null;
+  if (activeKey) {
+    dishImage = await generateGeminiFoodImage(query, activeKey);
+  }
+
+  if (!dishImage) {
+    dishImage = smartMatchDishImage(query, result.category, result.tag);
+  }
 
   return {
     name: query,
@@ -347,6 +392,6 @@ export const generateDishAIProfile = async (dishName, customApiKey = '') => {
     protein: result.protein || '15g',
     carbs: result.carbs || '35g',
     fats: result.fats || '15g',
-    image: localMatch,
+    image: dishImage,
   };
 };
