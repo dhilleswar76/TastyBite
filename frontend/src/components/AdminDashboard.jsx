@@ -438,7 +438,6 @@ Thank you for dining with TastyBite! ✨`;
     setEditingMenuItem(null);
     setNewAddon({ name: '', price: '', icon: '✨' });
     setImageUploadStatus('');
-    setShowFoodAssetLibrary(false);
     setMenuFormData({
       name: '',
       description: '',
@@ -469,7 +468,6 @@ Thank you for dining with TastyBite! ✨`;
     setEditingMenuItem(item);
     setNewAddon({ name: '', price: '', icon: '✨' });
     setImageUploadStatus('');
-    setShowFoodAssetLibrary(false);
     const isBeverage = item.category === 'beverages';
     const isDessert = item.category === 'desserts';
     const isBread = item.category === 'indian-breads';
