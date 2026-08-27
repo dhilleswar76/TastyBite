@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { orderAPI, reservationAPI, menuAPI, contactAPI, eventAPI, reviewAPI } from '../services/api';
 import { menuItems as fallbackMenu } from '../data/menuData';
-import { RESTAURANT_FOOD_ASSETS, smartMatchDishImage } from '../utils/foodAssets';
-import { AI_PROVIDERS, generateDishAIProfile } from '../utils/aiDishGenerator';
+import { generateDishAIProfile } from '../utils/aiDishGenerator';
 
 const PRESET_ADDONS = [
   { id: 'cheese', name: 'Extra Melted Cheese', price: 40, icon: '🧀' },
@@ -45,13 +44,8 @@ function AdminDashboard() {
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [editingMenuItem, setEditingMenuItem] = useState(null);
   const [newAddon, setNewAddon] = useState({ name: '', price: '', icon: '✨' });
-  const [showFoodAssetLibrary, setShowFoodAssetLibrary] = useState(false);
   const [imageUploadStatus, setImageUploadStatus] = useState('');
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
-  const [selectedAIProvider, setSelectedAIProvider] = useState(() => localStorage.getItem('tastybite_ai_provider') || 'builtin');
-  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('tastybite_gemini_key') || '');
-  const [openaiApiKey, setOpenaiApiKey] = useState(() => localStorage.getItem('tastybite_openai_key') || '');
-  const [showAISettings, setShowAISettings] = useState(false);
   const fileInputRef = useRef(null);
   const [menuFormData, setMenuFormData] = useState({
     name: '',
@@ -155,37 +149,15 @@ function AdminDashboard() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // 100% Smart Match Food Photo based on Dish Name
-  const handleAutoMatchDishImage = () => {
-    if (!menuFormData.name.trim()) {
-      showNotification('Please enter a Dish Name first to auto-match.', 'error');
-      return;
-    }
-    const matchedFile = smartMatchDishImage(menuFormData.name, menuFormData.category, menuFormData.tag);
-    const matchedAsset = RESTAURANT_FOOD_ASSETS.find((a) => a.file === matchedFile);
-    setMenuFormData((prev) => ({ ...prev, image: matchedFile }));
-    setImageUploadStatus(`Matched with "${matchedAsset?.name || 'Restaurant'}" photo`);
-    showNotification(`✨ 100% matched with "${matchedAsset?.name}" asset!`, 'success');
-  };
-
-  // Select Photo from Authentic Restaurant Library
-  const handleSelectFromLibrary = (asset) => {
-    setMenuFormData((prev) => ({ ...prev, image: asset.file }));
-    setShowFoodAssetLibrary(false);
-    setImageUploadStatus(`Selected "${asset.name}" photo`);
-    showNotification(`Selected "${asset.name}" photo from library!`, 'success');
-  };
-
   // AI Model Integration: Generates 100% accurate food photo, energy calories, macros & description
   const handleAIGenerateDish = async () => {
-    if (!menuFormData.name.trim()) {
-      showNotification('Please enter a Dish Name first to auto-generate with AI.', 'error');
+    if (!menuFormData.name || !menuFormData.name.trim()) {
+      showNotification('Please enter a Dish Name first to generate with AI.', 'error');
       return;
     }
     setIsGeneratingAI(true);
-    const activeKey = selectedAIProvider === 'gemini' ? geminiApiKey : selectedAIProvider === 'openai' ? openaiApiKey : '';
     try {
-      const profile = await generateDishAIProfile(menuFormData.name, selectedAIProvider, activeKey);
+      const profile = await generateDishAIProfile(menuFormData.name);
       setMenuFormData((prev) => ({
         ...prev,
         description: profile.description,
@@ -199,9 +171,8 @@ function AdminDashboard() {
         fats: profile.fats,
         image: profile.image,
       }));
-      const providerLabel = AI_PROVIDERS.find((p) => p.id === selectedAIProvider)?.name || 'AI';
-      setImageUploadStatus(`✨ ${profile.calories} kcal calculated (${providerLabel})`);
-      showNotification(`✨ ${providerLabel} generated 100% matched food photo & calculated ${profile.calories} kcal! 🤖`, 'success');
+      setImageUploadStatus(`✨ AI Generated Photo & ${profile.calories} kcal calculated`);
+      showNotification(`✨ AI generated 100% matched food photo & calculated ${profile.calories} kcal! 🤖`, 'success');
     } catch (err) {
       showNotification(err.message || 'AI Generation failed. Please try again.', 'error');
     } finally {
@@ -1814,88 +1785,22 @@ Thank you for dining with TastyBite! ✨`;
               <button className="modal-close-x" onClick={() => setShowMenuModal(false)}>&times;</button>
             </div>
 
-            {/* Multi-Provider AI Model Culinary Assistant Bar */}
+            {/* AI Culinary Assistant Bar */}
             <div className="admin-ai-generator-bar">
-              <div className="ai-bar-top-row">
-                <div className="ai-bar-left">
-                  <div className="ai-title-group">
-                    <span className="ai-badge-chip">🤖 Multi-Provider AI Culinary Engine</span>
-                    <button
-                      type="button"
-                      className="ai-settings-toggle-btn"
-                      onClick={() => setShowAISettings(!showAISettings)}
-                      title="Configure AI Providers & API Keys"
-                    >
-                      ⚙️ {showAISettings ? 'Hide Settings' : 'AI Settings'}
-                    </button>
-                  </div>
-                  <p>Auto-fetches 100% accurate food photo, energy calories (kcal), macros &amp; chef notes for any dish.</p>
-                </div>
-
-                <div className="ai-bar-actions">
-                  {/* Provider Tabs */}
-                  <div className="ai-provider-pill-group">
-                    {AI_PROVIDERS.map((prov) => (
-                      <button
-                        key={prov.id}
-                        type="button"
-                        className={`provider-chip-btn ${selectedAIProvider === prov.id ? 'active' : ''}`}
-                        onClick={() => {
-                          setSelectedAIProvider(prov.id);
-                          localStorage.setItem('tastybite_ai_provider', prov.id);
-                        }}
-                      >
-                        {prov.badge}
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="btn-ai-auto-generate"
-                    onClick={handleAIGenerateDish}
-                    disabled={isGeneratingAI}
-                  >
-                    {isGeneratingAI ? '🧠 Generating with AI...' : '✨ Auto-Generate with AI'}
-                  </button>
-                </div>
+              <div className="ai-bar-left">
+                <span className="ai-badge-chip">🤖 Gemini AI Culinary Engine</span>
+                <p>Enter dish name below to enable AI auto-generation of 100% matching photo, energy calories (kcal), macros &amp; chef notes.</p>
               </div>
 
-              {/* Collapsible AI API Key Settings */}
-              {showAISettings && (
-                <div className="ai-settings-drawer">
-                  <h4>Configure AI API Keys (Optional - Free Built-in works automatically):</h4>
-                  <div className="ai-keys-grid">
-                    <div className="form-group">
-                      <label>Google Gemini API Key (Google AI Studio Free Key)</label>
-                      <input
-                        type="password"
-                        placeholder="AIzaSy..."
-                        value={geminiApiKey}
-                        onChange={(e) => {
-                          setGeminiApiKey(e.target.value);
-                          localStorage.setItem('tastybite_gemini_key', e.target.value);
-                        }}
-                      />
-                      <small className="field-hint">Used when Google Gemini is selected.</small>
-                    </div>
-
-                    <div className="form-group">
-                      <label>OpenAI API Key (Optional)</label>
-                      <input
-                        type="password"
-                        placeholder="sk-proj-..."
-                        value={openaiApiKey}
-                        onChange={(e) => {
-                          setOpenaiApiKey(e.target.value);
-                          localStorage.setItem('tastybite_openai_key', e.target.value);
-                        }}
-                      />
-                      <small className="field-hint">Used when OpenAI GPT-4o-mini is selected.</small>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <button
+                type="button"
+                className="btn-ai-auto-generate"
+                onClick={handleAIGenerateDish}
+                disabled={!menuFormData.name || !menuFormData.name.trim() || isGeneratingAI}
+                title={!menuFormData.name?.trim() ? 'Please enter dish name below to enable AI' : 'Generate complete dish profile with Gemini AI'}
+              >
+                {isGeneratingAI ? '🧠 Generating with AI...' : '✨ Generate with AI'}
+              </button>
             </div>
 
             <form onSubmit={handleSaveMenuItem} className="admin-modal-form">
@@ -1979,7 +1884,7 @@ Thank you for dining with TastyBite! ✨`;
 
               {/* Dish Photo Studio / Image Picker */}
               <div className="admin-dish-image-studio">
-                <label className="studio-label">Dish Photo & Image Selection *</label>
+                <label className="studio-label">Dish Photo *</label>
                 <div className="dish-image-studio-box">
                   <div className="dish-image-preview-holder">
                     <img
@@ -1988,7 +1893,7 @@ Thank you for dining with TastyBite! ✨`;
                       className="dish-preview-img"
                     />
                     <span className="dish-image-type-tag">
-                      {menuFormData.image?.startsWith('data:') ? '📸 Device Upload' : '✨ Library Asset'}
+                      {menuFormData.image?.startsWith('data:') ? '📸 Device Upload' : '✨ Photo Asset'}
                     </span>
                   </div>
 
@@ -2001,7 +1906,7 @@ Thank you for dining with TastyBite! ✨`;
                         onClick={() => fileInputRef.current?.click()}
                         title="Upload photo from device file explorer or phone gallery"
                       >
-                        📁 Upload Photo
+                        📁 Upload Image
                       </button>
                       <input
                         ref={fileInputRef}
@@ -2010,26 +1915,6 @@ Thank you for dining with TastyBite! ✨`;
                         style={{ display: 'none' }}
                         onChange={handleDishFileUpload}
                       />
-
-                      {/* 100% Smart Match by Dish Name */}
-                      <button
-                        type="button"
-                        className="btn-image-action match"
-                        onClick={handleAutoMatchDishImage}
-                        title="Auto-match 100% accurate food photo based on the dish name"
-                      >
-                        ✨ 100% Auto-Match
-                      </button>
-
-                      {/* Browse 20+ Restaurant Food Library */}
-                      <button
-                        type="button"
-                        className={`btn-image-action library ${showFoodAssetLibrary ? 'active' : ''}`}
-                        onClick={() => setShowFoodAssetLibrary(!showFoodAssetLibrary)}
-                        title="Browse all authentic restaurant dish assets"
-                      >
-                        🖼️ Food Library ({RESTAURANT_FOOD_ASSETS.length})
-                      </button>
                     </div>
 
                     <div className="dish-image-input-manual">
@@ -2050,36 +1935,6 @@ Thank you for dining with TastyBite! ✨`;
                     )}
                   </div>
                 </div>
-
-                {/* Food Asset Library Drawer / Grid */}
-                {showFoodAssetLibrary && (
-                  <div className="food-asset-library-drawer">
-                    <div className="asset-drawer-header">
-                      <span>Tap any dish photo to select ({RESTAURANT_FOOD_ASSETS.length} in library):</span>
-                      <button
-                        type="button"
-                        className="close-drawer-btn"
-                        onClick={() => setShowFoodAssetLibrary(false)}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <div className="food-assets-grid">
-                      {RESTAURANT_FOOD_ASSETS.map((asset, aIdx) => (
-                        <button
-                          key={aIdx}
-                          type="button"
-                          className={`food-asset-card ${menuFormData.image === asset.file ? 'selected' : ''}`}
-                          onClick={() => handleSelectFromLibrary(asset)}
-                          title={asset.name}
-                        >
-                          <img src={asset.file} alt={asset.name} className="asset-thumb-img" />
-                          <span className="asset-name-label">{asset.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div className="form-group">

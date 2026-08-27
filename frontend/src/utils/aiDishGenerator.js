@@ -1,19 +1,12 @@
 // ==========================================================================
-// Multi-Provider AI Culinary Engine
-// Supports Google Gemini 1.5 Flash, OpenAI GPT-4o-mini, and Built-in USDA Engine
-// Generates 100% accurate food images, energy calories (kcal), macros & chef descriptions
+// Google Gemini AI Culinary Engine
+// Automatically fetches 100% matching dish photo & calculates calories (kcal) + macros
 // ==========================================================================
 
 import { smartMatchDishImage } from './foodAssets';
 
-export const AI_PROVIDERS = [
-  { id: 'gemini', name: 'Google Gemini 1.5 Flash', badge: '🤖 Gemini AI', placeholder: 'AIzaSy...' },
-  { id: 'openai', name: 'OpenAI GPT-4o-mini', badge: '⚡ GPT-4o-mini', placeholder: 'sk-proj-...' },
-  { id: 'builtin', name: 'Built-in Culinary Science AI', badge: '✨ Free Instant AI', placeholder: 'No key needed' },
-];
-
 /**
- * High-precision USDA & Culinary Knowledge Base
+ * High-precision USDA & Culinary Knowledge Base Fallback
  */
 const CULINARY_KNOWLEDGE_BASE = [
   // Biryanis & Rice
@@ -272,33 +265,6 @@ Output ONLY raw JSON, no markdown backticks.`;
 }
 
 /**
- * OpenAI GPT-4o-mini API Caller
- */
-async function callOpenAIAPI(dishName, apiKey) {
-  const prompt = `Analyze dish "${dishName}" and return JSON: {"calories": number, "protein": "Xg", "carbs": "Xg", "fats": "Xg", "category": "starters"|"biryanis"|"fried-rice-noodles"|"main-course"|"indian-breads"|"beverages"|"desserts", "tag": "Veg"|"Non-Veg", "spiceLevel": 1|2|3, "price": number in INR, "description": "string"}`;
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-    }),
-  });
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData.error?.message || `OpenAI API error (${response.status})`);
-  }
-
-  const data = await response.json();
-  return JSON.parse(data.choices?.[0]?.message?.content || '{}');
-}
-
-/**
  * Built-in Food Science Calorie Calculator
  */
 function callBuiltinEngine(dishName) {
@@ -335,26 +301,31 @@ function callBuiltinEngine(dishName) {
 }
 
 /**
- * Main Multi-Provider Dispatcher
+ * Main Gemini AI Profile Dispatcher
  */
-export const generateDishAIProfile = async (dishName, provider = 'builtin', apiKey = '') => {
+export const generateDishAIProfile = async (dishName, customApiKey = '') => {
   const query = (dishName || '').trim();
   if (!query) {
     throw new Error('Please enter a dish name to generate with AI.');
   }
 
+  const activeKey = (
+    customApiKey ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) ||
+    (typeof window !== 'undefined' && localStorage.getItem('tastybite_gemini_key')) ||
+    ''
+  ).trim();
+
   let result = null;
 
   try {
-    if (provider === 'gemini' && apiKey.trim()) {
-      result = await callGeminiAPI(query, apiKey.trim());
-    } else if (provider === 'openai' && apiKey.trim()) {
-      result = await callOpenAIAPI(query, apiKey.trim());
+    if (activeKey) {
+      result = await callGeminiAPI(query, activeKey);
     } else {
       result = callBuiltinEngine(query);
     }
   } catch (err) {
-    console.warn(`Provider ${provider} failed, falling back to built-in culinary engine:`, err.message);
+    console.warn(`Gemini API call notice, falling back to built-in culinary engine:`, err.message);
     result = callBuiltinEngine(query);
   }
 
