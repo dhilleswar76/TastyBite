@@ -228,9 +228,9 @@ export const generateAIFoodImage = (dishName) => {
  * Google Gemini 1.5 Flash API Caller
  */
 async function callGeminiAPI(dishName, apiKey) {
-  const prompt = `You are a certified executive chef and master food scientist.
+  const prompt = `You are an expert executive chef and master food scientist.
 Analyze the dish: "${dishName}".
-Provide exact nutritional energy and restaurant specifications in strict JSON format:
+Provide exact nutritional energy, macros, category, and restaurant menu specifications in strict JSON format:
 {
   "calories": (integer, estimated energy in kcal for standard single serving),
   "protein": "(string with 'g', e.g. '24g')",
@@ -244,10 +244,14 @@ Provide exact nutritional energy and restaurant specifications in strict JSON fo
 }
 Output ONLY raw JSON, no markdown backticks.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const keyToUse = apiKey || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) || '';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(keyToUse)}`;
   const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': keyToUse,
+    },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
     }),
