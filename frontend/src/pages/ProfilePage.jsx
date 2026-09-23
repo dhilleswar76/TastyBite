@@ -65,25 +65,75 @@ function ProfilePage() {
         </div>
       </div>
 
-      <div className="profile-page-container">
-        {/* Main Profile Card */}
-        <div className="profile-hero-card">
-          <div className="profile-hero-avatar-side">
-            <div className="profile-large-avatar-wrap">
-              {user?.avatar ? (
-                <img src={user.avatar} alt="Profile" className="profile-large-avatar-img" />
-              ) : isAuthenticated && user?.name ? (
-                <div
-                  className="profile-large-avatar-initials"
-                  style={{ background: getAvatarGradient(user.name) }}
-                >
-                  {getInitials(user.name)}
-                </div>
-              ) : (
-                <div className="profile-large-avatar-guest">👤</div>
-              )}
+      {!isAuthenticated ? (
+        <div className="profile-page-container">
+          <div className="profile-auth-gate-card">
+            <div className="gate-icon-badge">🔐</div>
+            <h2>Sign In to Access Your Account</h2>
+            <p className="gate-subtext">
+              Please sign in or create a free TastyBite account to view your TastyPoints rewards wallet, manage reservations, track live orders, and edit your profile.
+            </p>
+
+            <div className="gate-actions-row">
+              <Link to="/signin" className="btn btn-primary gate-btn">
+                🔑 Sign In to Account
+              </Link>
+              <Link to="/signup" className="btn btn-secondary gate-btn">
+                ✨ Create Free Account (Sign Up)
+              </Link>
             </div>
-            {isAuthenticated && (
+
+            <div className="gate-benefits-grid">
+              <div className="benefit-item">
+                <span className="benefit-icon">🎁</span>
+                <div>
+                  <strong>TastyPoints Rewards</strong>
+                  <p>Earn 10 points on every ₹100 spent and redeem for instant checkout discounts.</p>
+                </div>
+              </div>
+              <div className="benefit-item">
+                <span className="benefit-icon">📅</span>
+                <div>
+                  <strong>Fast Table Reservations</strong>
+                  <p>Book rooftop, VIP, or garden tables with 1-click confirmation.</p>
+                </div>
+              </div>
+              <div className="benefit-item">
+                <span className="benefit-icon">📍</span>
+                <div>
+                  <strong>Live Kitchen Tracking</strong>
+                  <p>Follow your meal preparation and delivery in real-time.</p>
+                </div>
+              </div>
+              <div className="benefit-item">
+                <span className="benefit-icon">⭐</span>
+                <div>
+                  <strong>VIP Member Status</strong>
+                  <p>Enjoy exclusive chef spotlight discounts and personalized food suggestions.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="profile-page-container">
+          {/* Main Profile Card */}
+          <div className="profile-hero-card">
+            <div className="profile-hero-avatar-side">
+              <div className="profile-large-avatar-wrap">
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="Profile" className="profile-large-avatar-img" />
+                ) : user?.name ? (
+                  <div
+                    className="profile-large-avatar-initials"
+                    style={{ background: getAvatarGradient(user.name) }}
+                  >
+                    {getInitials(user.name)}
+                  </div>
+                ) : (
+                  <div className="profile-large-avatar-guest">👤</div>
+                )}
+              </div>
               <button
                 type="button"
                 className="profile-change-avatar-btn"
@@ -91,142 +141,125 @@ function ProfilePage() {
               >
                 📷 Edit Photo / Initials
               </button>
-            )}
-          </div>
-
-          <div className="profile-hero-info-side">
-            <div className="profile-name-tier-row">
-              <h2>{isAuthenticated && user?.name ? user.name : 'Guest Gourmet'}</h2>
-              {isAuthenticated ? (
-                <span className="profile-tier-badge">👑 VIP Diner Member</span>
-              ) : (
-                <span className="profile-guest-badge">Guest Account</span>
-              )}
             </div>
-            <p className="profile-email-txt">
-              {isAuthenticated && user?.email ? user.email : 'Log in to sync your orders, points, and reservations.'}
-            </p>
 
-            {isAuthenticated ? (
+            <div className="profile-hero-info-side">
+              <div className="profile-name-tier-row">
+                <h2>{user?.name || 'Valued Diner'}</h2>
+                <span className="profile-tier-badge">👑 VIP Diner Member</span>
+              </div>
+              <p className="profile-email-txt">
+                {user?.email || 'Logged in to TastyBite Member Portal'}
+              </p>
+
               <div className="profile-quick-meta-grid">
                 <div className="meta-card">
-                  <span className="meta-label">Member Since</span>
-                  <strong>August 2026</strong>
+                  <span className="meta-label">Member Status</span>
+                  <strong className="verified-green-txt">✓ Active VIP</strong>
                 </div>
                 <div className="meta-card">
                   <span className="meta-label">Account Role</span>
                   <strong className="capitalize-txt">{user?.role || 'user'}</strong>
                 </div>
                 <div className="meta-card">
-                  <span className="meta-label">Verification</span>
-                  <strong className="verified-green-txt">✓ Verified</strong>
+                  <span className="meta-label">TastyPoints</span>
+                  <strong className="gold-txt">{loyaltyPoints} pts</strong>
                 </div>
               </div>
-            ) : (
-              <div className="profile-login-prompt">
-                <Link to="/signin" className="btn btn-primary">
-                  Sign In to Account
-                </Link>
-                <Link to="/signup" className="btn btn-secondary">
-                  Create Free Account
-                </Link>
-              </div>
-            )}
+            </div>
           </div>
-        </div>
 
-        {/* Loyalty Wallet Card */}
-        <div className="profile-loyalty-wallet-card">
-          <div className="wallet-card-header">
-            <div className="wallet-icon-title">
-              <span className="wallet-symbol">🎁</span>
-              <div>
-                <h3>TastyPoints Loyalty Wallet</h3>
-                <p>Earn points on every order and redeem for instant checkout discounts.</p>
+          {/* Loyalty Wallet Card */}
+          <div className="profile-loyalty-wallet-card">
+            <div className="wallet-card-header">
+              <div className="wallet-icon-title">
+                <span className="wallet-symbol">🎁</span>
+                <div>
+                  <h3>TastyPoints Loyalty Wallet</h3>
+                  <p>Earn points on every order and redeem for instant checkout discounts.</p>
+                </div>
+              </div>
+              <div className="wallet-points-badge">
+                <strong>{loyaltyPoints}</strong>
+                <span>TastyPoints</span>
               </div>
             </div>
-            <div className="wallet-points-badge">
-              <strong>{loyaltyPoints}</strong>
-              <span>TastyPoints</span>
+
+            <div className="wallet-metrics-row">
+              <div className="wallet-metric-box">
+                <span>Redeemable Discount</span>
+                <strong>₹{(loyaltyPoints / 2).toFixed(0)} OFF</strong>
+              </div>
+              <div className="wallet-metric-box">
+                <span>Earning Multiplier</span>
+                <strong>10 pts / ₹100</strong>
+              </div>
+              <div className="wallet-metric-box">
+                <span>Current Status</span>
+                <strong>Active &bull; VIP Tier</strong>
+              </div>
+            </div>
+
+            <div className="wallet-progress-bar-wrap">
+              <div className="progress-labels">
+                <span>Tier Progress (to next ₹100 voucher)</span>
+                <span>{Math.min(100, Math.round((loyaltyPoints / 500) * 100))}%</span>
+              </div>
+              <div className="progress-track">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${Math.min(100, (loyaltyPoints / 500) * 100)}%` }}
+                ></div>
+              </div>
             </div>
           </div>
 
-          <div className="wallet-metrics-row">
-            <div className="wallet-metric-box">
-              <span>Redeemable Discount</span>
-              <strong>₹{(loyaltyPoints / 2).toFixed(0)} OFF</strong>
-            </div>
-            <div className="wallet-metric-box">
-              <span>Earning Multiplier</span>
-              <strong>10 pts / ₹100</strong>
-            </div>
-            <div className="wallet-metric-box">
-              <span>Current Status</span>
-              <strong>Active &bull; VIP Tier</strong>
-            </div>
-          </div>
-
-          <div className="wallet-progress-bar-wrap">
-            <div className="progress-labels">
-              <span>Tier Progress (to next ₹100 voucher)</span>
-              <span>{Math.min(100, Math.round((loyaltyPoints / 500) * 100))}%</span>
-            </div>
-            <div className="progress-track">
-              <div
-                className="progress-fill"
-                style={{ width: `${Math.min(100, (loyaltyPoints / 500) * 100)}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Account Navigation Grid */}
-        <div className="profile-actions-grid">
-          <button
-            type="button"
-            className="profile-action-tile"
-            onClick={openOrderTracker}
-          >
-            <span className="tile-icon">📍</span>
-            <div className="tile-content">
-              <h4>Live Order Tracker</h4>
-              <p>Check the live preparation and delivery status of your orders.</p>
-            </div>
-            <span className="tile-arrow">&rarr;</span>
-          </button>
-
-          <Link to="/reservations" className="profile-action-tile">
-            <span className="tile-icon">📅</span>
-            <div className="tile-content">
-              <h4>Table Reservations</h4>
-              <p>Book a table for fine dining, rooftop views, or private lounges.</p>
-            </div>
-            <span className="tile-arrow">&rarr;</span>
-          </Link>
-
-          <Link to="/menu" className="profile-action-tile">
-            <span className="tile-icon">🍲</span>
-            <div className="tile-content">
-              <h4>Explore Our Menu</h4>
-              <p>Browse signature biryanis, tandoor specials, and desserts.</p>
-            </div>
-            <span className="tile-arrow">&rarr;</span>
-          </Link>
-
-          {user?.role === 'admin' && (
-            <Link to="/admin" className="profile-action-tile admin-tile">
-              <span className="tile-icon">⚙️</span>
+          {/* Quick Account Navigation Grid */}
+          <div className="profile-actions-grid">
+            <button
+              type="button"
+              className="profile-action-tile"
+              onClick={openOrderTracker}
+            >
+              <span className="tile-icon">📍</span>
               <div className="tile-content">
-                <h4>Restaurant Operations (Admin)</h4>
-                <p>Live Kitchen Display (KDS), menu manager, analytics &amp; orders.</p>
+                <h4>Live Order Tracker</h4>
+                <p>Check the live preparation and delivery status of your orders.</p>
+              </div>
+              <span className="tile-arrow">&rarr;</span>
+            </button>
+
+            <Link to="/reservations" className="profile-action-tile">
+              <span className="tile-icon">📅</span>
+              <div className="tile-content">
+                <h4>Table Reservations</h4>
+                <p>Book a table for fine dining, rooftop views, or private lounges.</p>
               </div>
               <span className="tile-arrow">&rarr;</span>
             </Link>
-          )}
-        </div>
 
-        {/* Sign Out Row */}
-        {isAuthenticated && (
+            <Link to="/menu" className="profile-action-tile">
+              <span className="tile-icon">🍲</span>
+              <div className="tile-content">
+                <h4>Explore Our Menu</h4>
+                <p>Browse signature biryanis, tandoor specials, and desserts.</p>
+              </div>
+              <span className="tile-arrow">&rarr;</span>
+            </Link>
+
+            {user?.role === 'admin' && (
+              <Link to="/admin" className="profile-action-tile admin-tile">
+                <span className="tile-icon">⚙️</span>
+                <div className="tile-content">
+                  <h4>Restaurant Operations (Admin)</h4>
+                  <p>Live Kitchen Display (KDS), menu manager, analytics &amp; orders.</p>
+                </div>
+                <span className="tile-arrow">&rarr;</span>
+              </Link>
+            )}
+          </div>
+
+          {/* Sign Out Row */}
           <div className="profile-footer-actions">
             <button
               type="button"
@@ -236,8 +269,8 @@ function ProfilePage() {
               🚪 Sign Out of Account
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Edit Profile Modal */}
       {showEditModal && (

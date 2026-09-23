@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
 function CartDrawer() {
+  const navigate = useNavigate();
   const {
     cartItems,
     isCartOpen,
@@ -102,11 +104,10 @@ function CartDrawer() {
                 className="explore-menu-btn"
                 onClick={() => {
                   setIsCartOpen(false);
-                  const menuSection = document.getElementById('menu');
-                  if (menuSection) menuSection.scrollIntoView({ behavior: 'smooth' });
+                  navigate('/menu');
                 }}
               >
-                Explore Menu
+                Explore Complete Menu &rarr;
               </button>
             </div>
           ) : (

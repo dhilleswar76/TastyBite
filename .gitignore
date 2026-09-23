@@ -27,3 +27,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+whatsapp_session/
+backend/whatsapp_session/
+

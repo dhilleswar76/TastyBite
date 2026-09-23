@@ -237,14 +237,16 @@ function callBuiltinEngine(dishName) {
   };
 }
 
+import { getMatchingFoodPhotoChoices, smartMatchDishImage } from './foodAssets';
+
 /**
- * Main Gemini AI Profile Dispatcher
- * Pure dynamic AI image generation & precise calorie calculation
+ * Main Dish Profile & Photo Engine (Option 1)
+ * Combines instant high-precision calorie/macro science + 1-click HD photo choices
  */
 export const generateDishAIProfile = async (dishName, customApiKey = '') => {
   const query = (dishName || '').trim();
   if (!query) {
-    throw new Error('Please enter a dish name to generate with AI.');
+    throw new Error('Please enter a dish name to generate.');
   }
 
   const activeKey = (
@@ -263,24 +265,28 @@ export const generateDishAIProfile = async (dishName, customApiKey = '') => {
       result = callBuiltinEngine(query);
     }
   } catch (err) {
-    console.warn(`Falling back to built-in culinary science engine:`, err.message);
     result = callBuiltinEngine(query);
   }
 
-  // Generate 100% dynamic AI image
-  const dishImage = generateDynamicAIFoodImage(query, result.visualPrompt);
+  const assignedCategory = result.category || 'starters';
+  const assignedTag = result.tag === 'Non-Veg' ? 'Non-Veg' : 'Veg';
+
+  // Get top 4 HD food photo choices
+  const photoChoices = getMatchingFoodPhotoChoices(query, assignedCategory, assignedTag);
+  const primaryImage = photoChoices[0]?.file || '/pictures-restaurant/Paneer-Tikka.webp';
 
   return {
     name: query,
-    description: result.description || `Special ${query} cooked with authentic spices.`,
+    description: result.description || `Special ${query} cooked with authentic spices and fresh herbs.`,
     price: Number(result.price) || 249,
-    category: result.category || 'starters',
-    tag: result.tag === 'Non-Veg' ? 'Non-Veg' : 'Veg',
+    category: assignedCategory,
+    tag: assignedTag,
     spiceLevel: Number(result.spiceLevel) || 2,
     calories: Number(result.calories) || 350,
     protein: result.protein || '15g',
     carbs: result.carbs || '35g',
     fats: result.fats || '15g',
-    image: dishImage,
+    image: primaryImage,
+    photoChoices: photoChoices,
   };
 };

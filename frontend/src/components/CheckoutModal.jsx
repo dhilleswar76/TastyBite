@@ -88,6 +88,12 @@ function CheckoutModal() {
       return;
     }
 
+    const cleanPhone = formData.phone.replace(/[^0-9]/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
+      setErrorMessage('⚠️ Valid 10-digit mobile phone number is mandatory for order updates and WhatsApp bill.');
+      return;
+    }
+
     if (orderType === 'delivery' && !formData.address.trim()) {
       setErrorMessage('Please provide a delivery address.');
       return;
@@ -107,14 +113,14 @@ function CheckoutModal() {
         customer: {
           name: formData.name.trim(),
           email: formData.email.trim(),
-          phone: formData.phone.trim(),
-          orderType,
+          phone: cleanPhone,
           address: orderType === 'delivery' ? formData.address.trim() : '',
+          orderType,
           tableNumber: orderType === 'dine-in' ? formData.tableNumber.trim() : '',
           notes: formData.notes.trim(),
         },
         items: cartItems.map((item) => ({
-          menuItemId: item._id || null,
+          menuItemId: item.id,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
@@ -158,17 +164,26 @@ function CheckoutModal() {
     }
   };
 
+  const [whatsAppDeliveryState, setWhatsAppDeliveryState] = useState('idle'); // 'idle' | 'sent'
+
   const handleShareWhatsAppReceipt = (order) => {
     if (!order) return;
     const phone = order.customer?.phone || formData.phone;
+    const cleanPhone = phone ? String(phone).replace(/[^0-9]/g, '') : '';
+    if (!cleanPhone || cleanPhone.length < 10) {
+      alert('Please provide a valid 10-digit phone number to receive WhatsApp bill.');
+      return;
+    }
+
+    const formattedDigits = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
     const formattedDate = new Date().toLocaleString();
     const itemsText = order.items
       ?.map((it) => `• ${it.quantity}x ${it.name} - ₹${it.price * it.quantity}`)
       .join('\n');
 
-    const message = `🍽️ *TASTYBITE FINE DINING - TAX INVOICE* 🍽️
+    const invoiceText = `🍽️ *TASTYBITE FINE DINING - TAX INVOICE* 🍽️
 *Order Number:* ${order.orderNumber}
-*Type:* ${order.customer?.orderType === 'dine-in' ? `Dine-In (Table #${order.customer?.tableNumber})` : order.customer?.orderType === 'takeaway' ? 'Takeaway' : 'Home Delivery'}
+*Type:* ${order.customer?.orderType === 'dine-in' ? `Dine-In (Table #${order.customer?.tableNumber || '1'})` : order.customer?.orderType === 'takeaway' ? 'Takeaway' : 'Home Delivery'}
 *Date & Time:* ${formattedDate}
 *Customer:* ${order.customer?.name}
 
@@ -182,12 +197,9 @@ ${order.pricing?.discount ? `*Discount:* -₹${order.pricing?.discount}\n` : ''}
 
 Thank you for dining with TastyBite! ✨`;
 
-    let cleanDigits = phone ? phone.replace(/[^0-9]/g, '') : '';
-    if (cleanDigits.length === 10) cleanDigits = `91${cleanDigits}`;
-    const url = cleanDigits
-      ? `https://api.whatsapp.com/send?phone=${cleanDigits}&text=${encodeURIComponent(message)}`
-      : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+    const waUrl = `https://api.whatsapp.com/send?phone=${formattedDigits}&text=${encodeURIComponent(invoiceText)}`;
+    window.open(waUrl, '_blank');
+    setWhatsAppDeliveryState('sent');
   };
 
   return (
@@ -255,14 +267,25 @@ Thank you for dining with TastyBite! ✨`;
             </div>
 
             <div className="order-success-actions">
-              <button
-                type="button"
-                className="btn-whatsapp-bill"
-                onClick={() => handleShareWhatsAppReceipt(placedOrder)}
-                style={{ background: '#25d366', color: '#fff', padding: '0.75rem 1.2rem', borderRadius: '50px', fontWeight: 800, border: 'none', cursor: 'pointer' }}
-              >
-                📲 Send Receipt on WhatsApp
-              </button>
+              {whatsAppDeliveryState === 'sent' ? (
+                <button
+                  type="button"
+                  className="btn-whatsapp-bill"
+                  onClick={() => handleShareWhatsAppReceipt(placedOrder)}
+                  style={{ background: '#10b981', color: '#fff', padding: '0.75rem 1.2rem', borderRadius: '50px', fontWeight: 800, border: 'none', cursor: 'pointer' }}
+                >
+                  ✅ WhatsApp Sent (Resend)
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-whatsapp-bill"
+                  onClick={() => handleShareWhatsAppReceipt(placedOrder)}
+                  style={{ background: '#25d366', color: '#fff', padding: '0.75rem 1.2rem', borderRadius: '50px', fontWeight: 800, border: 'none', cursor: 'pointer' }}
+                >
+                  📲 Send WhatsApp Bill
+                </button>
+              )}
               <button
                 className="track-live-btn"
                 onClick={() => {

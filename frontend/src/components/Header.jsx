@@ -87,55 +87,108 @@ function Header() {
       <nav className={`nav ${showNav ? 'show' : ''}`}>
         {!isAuthPage && !isAdminPage && (
           <>
+            <div className="mobile-nav-header">
+              <span className="mobile-nav-title">Navigation Menu</span>
+              <button
+                type="button"
+                className="mobile-nav-close-btn"
+                onClick={() => setShowNav(false)}
+                aria-label="Close menu"
+              >
+                ✕
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className="mobile-drawer-tracker-btn"
+              onClick={() => {
+                setShowNav(false);
+                openOrderTracker();
+              }}
+            >
+              <span>📍 Track Live Order</span>
+              <span className="drawer-badge">Live Status</span>
+            </button>
+
             <NavLink
               to="/"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={() => setShowNav(false)}
             >
-              Home
+              <span>🏠 Home</span>
             </NavLink>
             <NavLink
               to="/menu"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={() => setShowNav(false)}
             >
-              Menu
+              <span>🍲 Menu &amp; Order</span>
             </NavLink>
             <NavLink
               to="/about"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={() => setShowNav(false)}
             >
-              About
+              <span>📖 Our Story &amp; Heritage</span>
             </NavLink>
             <NavLink
               to="/reservations"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={() => setShowNav(false)}
             >
-              Reservations
+              <span>📅 Table Reservations</span>
             </NavLink>
             <NavLink
               to="/events"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={() => setShowNav(false)}
             >
-              Events &amp; Catering
+              <span>🎉 Events &amp; Catering</span>
             </NavLink>
             <NavLink
               to="/reviews"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={() => setShowNav(false)}
             >
-              Reviews
+              <span>⭐ Guest Reviews</span>
             </NavLink>
             <NavLink
               to="/contact"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={() => setShowNav(false)}
             >
-              Contact
+              <span>📞 Contact &amp; Location</span>
             </NavLink>
+
+            <div className="mobile-drawer-footer">
+              {isAuthenticated ? (
+                <NavLink
+                  to="/profile"
+                  className="mobile-drawer-profile-btn"
+                  onClick={() => setShowNav(false)}
+                >
+                  <span>👤 My Profile &amp; Rewards ({loyaltyPoints} pts)</span>
+                </NavLink>
+              ) : (
+                <div className="mobile-drawer-auth-btns">
+                  <Link
+                    to="/signin"
+                    className="drawer-signin-btn"
+                    onClick={() => setShowNav(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="drawer-signup-btn"
+                    onClick={() => setShowNav(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
+            </div>
           </>
         )}
       </nav>
@@ -352,15 +405,25 @@ function Header() {
           )}
         </div>
 
-        {/* Mobile Navigation Drawer Toggle */}
-        <button
-          id="navToggle"
-          className="nav-toggle"
-          onClick={toggleNav}
-          aria-label="Toggle navigation"
-        >
-          &#9776;
-        </button>
+      {/* Nav Backdrop Overlay for Mobile */}
+      {showNav && (
+        <div
+          className="nav-backdrop"
+          onClick={() => setShowNav(false)}
+          aria-hidden="true"
+        ></div>
+      )}
+
+      {/* Mobile Navigation Drawer Toggle */}
+      <button
+        id="navToggle"
+        className={`nav-toggle ${showNav ? 'active' : ''}`}
+        onClick={toggleNav}
+        aria-label="Toggle navigation"
+        aria-expanded={showNav}
+      >
+        {showNav ? '✕' : '☰'}
+      </button>
       </div>
 
       {/* Profile Edit Modal */}

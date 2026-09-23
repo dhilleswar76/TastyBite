@@ -238,6 +238,18 @@ export const orderAPI = {
     });
     return parseResponse(response, 'Failed to delete order');
   },
+
+  // Send WhatsApp bill directly without redirecting
+  sendWhatsAppBill: async (payload) => {
+    const response = await fetch(`${API_URL}/orders/send-whatsapp-bill`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    return parseResponse(response, 'Failed to send WhatsApp bill');
+  },
 };
 
 // Contact API
@@ -359,6 +371,34 @@ export const eventAPI = {
       method: 'DELETE',
     });
     return parseResponse(response, 'Failed to delete event inquiry');
+  },
+};
+
+// WhatsApp Gateway API (Option B)
+export const whatsappAPI = {
+  getStatus: async () => {
+    const response = await fetch(`${API_URL}/whatsapp/status`);
+    return parseResponse(response, 'Failed to fetch WhatsApp gateway status');
+  },
+  updateConfig: async (configData) => {
+    const response = await fetch(`${API_URL}/whatsapp/config`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(configData),
+    });
+    return parseResponse(response, 'Failed to update WhatsApp settings');
+  },
+  sendTest: async (phone) => {
+    const response = await fetch(`${API_URL}/whatsapp/send-test`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ phone }),
+    });
+    return parseResponse(response, 'Failed to send test WhatsApp message');
   },
 };
 

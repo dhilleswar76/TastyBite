@@ -9,6 +9,7 @@ import contactRouter from './routes/contact.js';
 import ordersRouter from './routes/orders.js';
 import reviewsRouter from './routes/reviews.js';
 import eventsRouter from './routes/events.js';
+import whatsappRouter from './routes/whatsapp.js';
 
 // Load env vars
 dotenv.config();
@@ -38,6 +39,7 @@ app.use(['/api/orders', '/orders'], ordersRouter);
 app.use(['/api/reviews', '/reviews'], reviewsRouter);
 app.use(['/api/events', '/events'], eventsRouter);
 app.use(['/api/contact', '/contact'], contactRouter);
+app.use(['/api/whatsapp', '/whatsapp'], whatsappRouter);
 
 // Health check routes
 app.all(['/api', '/'], (req, res) => {
@@ -72,6 +74,11 @@ if (!process.env.VERCEL) {
     connectDB().catch((err) => {
       console.error('Database connection error on start:', err.message);
     });
+
+    // Initialize WhatsApp Linked Device Bot in the background
+    import('./services/whatsappBotService.js').then((m) => {
+      m.startWhatsAppBot().catch((err) => console.warn('WhatsApp Bot auto-start notice:', err.message));
+    }).catch(() => {});
   });
 
   server.on('error', (err) => {

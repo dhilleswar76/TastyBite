@@ -1,105 +1,85 @@
 import express from 'express';
 import Contact from '../models/Contact.js';
+import { fallbackStore } from '../models/fallbackStore.js';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 
-// @route   GET /api/contact
-// @desc    Get all contact messages
-// @access  Public (should be protected in production)
-router.get('/', async (req, res) => {
-  try {
-    const contacts = await Contact.find().sort({ createdAt: -1 });
-    res.json({
-      success: true,
-      count: contacts.length,
-      data: contacts,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Server Error',
-    });
-  }
-});
-
 // @route   POST /api/contact
-// @desc    Create new contact message
+// @desc    Submit contact message
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const contact = await Contact.create(req.body);
+    let contact = null;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        contact = await Contact.create(req.body);
+      } catch (e) {
+        console.warn('MongoDB contact insert notice:', e.message);
+      }
+    }
+
+    if (!contact) {
+      contact = {
+        ...req.body,
+        _id: `con-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        status: req.body.status || 'unread',
+        createdAt: new Date().toISOString(),
+      };
+    }
+
+    fallbackStore.contacts.unshift(contact);
 
     res.status(201).json({
       success: true,
       data: contact,
     });
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((val) => val.message);
-      return res.status(400).json({
-        success: false,
-        error: messages,
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      error: 'Server Error',
-    });
+    const contact = {
+      ...req.body,
+      _id: `con-${Date.now()}`,
+      status: req.body.status || 'unread',
+      createdAt: new Date().toISOString(),
+    };
+    fallbackStore.contacts.unshift(contact);
+    res.status(201).json({ success: true, data: contact });
   }
 });
 
-// @route   PUT /api/contact/:id
-// @desc    Update contact message status
-// @access  Public (should be protected in production)
-router.put('/:id', async (req, res) => {
+// @route   GET /api/contact
+// @desc    Get all contact messages
+// @access  Public / Admin
+router.get('/', async (req, res) => {
   try {
-    const contact = await Contact.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const { status } = req.query;
 
-    if (!contact) {
-      return res.status(404).json({
-        success: false,
-        error: 'Contact message not found',
-      });
+    if (mongoose.connection.readyState === 1) {
+      const filter = {};
+      if (status && status !== 'all') filter.status = status;
+
+      const contacts = await Contact.find(filter).sort({ createdAt: -1 });
+      if (contacts.length > 0) {
+        return res.json({
+          success: true,
+          count: contacts.length,
+          data: contacts,
+        });
+      }
     }
+
+    let list = fallbackStore.contacts;
+    if (status && status !== 'all') list = list.filter((c) => c.status === status);
 
     res.json({
       success: true,
-      data: contact,
+      count: list.length,
+      data: list,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Server Error',
-    });
-  }
-});
-
-// @route   DELETE /api/contact/:id
-// @desc    Delete contact message
-// @access  Public (should be protected in production)
-router.delete('/:id', async (req, res) => {
-  try {
-    const contact = await Contact.findByIdAndDelete(req.params.id);
-
-    if (!contact) {
-      return res.status(404).json({
-        success: false,
-        error: 'Contact message not found',
-      });
-    }
-
     res.json({
       success: true,
-      data: {},
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Server Error',
+      count: fallbackStore.contacts.length,
+      data: fallbackStore.contacts,
     });
   }
 });
