@@ -35,6 +35,7 @@ function CheckoutModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [placedOrder, setPlacedOrder] = useState(null);
+  const [whatsAppDeliveryState, setWhatsAppDeliveryState] = useState('idle'); // 'idle' | 'sent'
 
   // Sync tableNumber from context if URL scanned
   useEffect(() => {
@@ -163,8 +164,6 @@ function CheckoutModal() {
       setIsSubmitting(false);
     }
   };
-
-  const [whatsAppDeliveryState, setWhatsAppDeliveryState] = useState('idle'); // 'idle' | 'sent'
 
   const handleShareWhatsAppReceipt = (order) => {
     if (!order) return;
