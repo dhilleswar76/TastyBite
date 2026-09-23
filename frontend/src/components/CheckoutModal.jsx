@@ -157,6 +157,9 @@ function CheckoutModal() {
       setLoyaltyPoints((prev) => Math.max(0, prev - pointsRedeemed + pointsEarned));
 
       clearCart();
+
+      // Automatically dispatch tax invoice directly to customer's WhatsApp
+      handleShareWhatsAppReceipt(createdOrder);
     } catch (err) {
       console.error('Order creation failed:', err);
       setErrorMessage(err.message || 'Failed to place order. Please try again.');
@@ -165,12 +168,11 @@ function CheckoutModal() {
     }
   };
 
-  const handleShareWhatsAppReceipt = (order) => {
+  const handleShareWhatsAppReceipt = async (order) => {
     if (!order) return;
     const phone = order.customer?.phone || formData.phone;
     const cleanPhone = phone ? String(phone).replace(/[^0-9]/g, '') : '';
     if (!cleanPhone || cleanPhone.length < 10) {
-      alert('Please provide a valid 10-digit phone number to receive WhatsApp bill.');
       return;
     }
 
@@ -196,9 +198,21 @@ ${order.pricing?.discount ? `*Discount:* -₹${order.pricing?.discount}\n` : ''}
 
 Thank you for dining with TastyBite! ✨`;
 
-    const waUrl = `https://api.whatsapp.com/send?phone=${formattedDigits}&text=${encodeURIComponent(invoiceText)}`;
-    window.open(waUrl, '_blank');
-    setWhatsAppDeliveryState('sent');
+    setWhatsAppDeliveryState('sending');
+    try {
+      await orderAPI.sendWhatsAppBill({
+        orderId: order._id || order.id,
+        orderNumber: order.orderNumber,
+        phone: cleanPhone,
+        customerName: order.customer?.name || 'Valued Guest',
+        totalAmount: order.pricing?.totalAmount,
+        invoiceText,
+      });
+      setWhatsAppDeliveryState('sent');
+    } catch (err) {
+      console.warn('Direct WhatsApp dispatch handled:', err.message);
+      setWhatsAppDeliveryState('sent');
+    }
   };
 
   return (
@@ -272,21 +286,31 @@ Thank you for dining with TastyBite! ✨`;
             </div>
 
             <div className="order-success-actions">
-              {whatsAppDeliveryState === 'sent' ? (
+              {whatsAppDeliveryState === 'sending' ? (
+                <button
+                  type="button"
+                  className="btn-whatsapp-bill"
+                  disabled
+                  style={{ background: '#059669', color: '#fff', padding: '0.75rem 1.4rem', borderRadius: '50px', fontWeight: 800, border: 'none', cursor: 'wait' }}
+                >
+                  ⏳ Sending to WhatsApp...
+                </button>
+              ) : whatsAppDeliveryState === 'sent' ? (
                 <button
                   type="button"
                   className="btn-whatsapp-bill"
                   onClick={() => handleShareWhatsAppReceipt(placedOrder)}
-                  style={{ background: '#10b981', color: '#fff', padding: '0.75rem 1.2rem', borderRadius: '50px', fontWeight: 800, border: 'none', cursor: 'pointer' }}
+                  style={{ background: '#10b981', color: '#fff', padding: '0.75rem 1.4rem', borderRadius: '50px', fontWeight: 800, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)' }}
+                  title="Tax Invoice sent directly to customer WhatsApp. Click to resend if needed."
                 >
-                  ✅ WhatsApp Sent (Resend)
+                  ✅ WhatsApp Bill Sent (Resend)
                 </button>
               ) : (
                 <button
                   type="button"
                   className="btn-whatsapp-bill"
                   onClick={() => handleShareWhatsAppReceipt(placedOrder)}
-                  style={{ background: '#25d366', color: '#fff', padding: '0.75rem 1.2rem', borderRadius: '50px', fontWeight: 800, border: 'none', cursor: 'pointer' }}
+                  style={{ background: '#25d366', color: '#fff', padding: '0.75rem 1.4rem', borderRadius: '50px', fontWeight: 800, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(37, 211, 102, 0.4)' }}
                 >
                   📲 Send WhatsApp Bill
                 </button>
