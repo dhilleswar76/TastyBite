@@ -156,8 +156,21 @@ export const sendDirectWhatsAppMessage = async (phone, messageText) => {
     throw new Error('WhatsApp device is not linked yet. Please scan the QR Code in Admin Dashboard (Linked Devices) first.');
   }
 
-  const cleanDigits = String(phone).replace(/[^0-9]/g, '');
-  const recipientDigits = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
+  let cleanDigits = String(phone).replace(/[^0-9]/g, '');
+  // Remove leading zeros if present (e.g. 09876543210 -> 9876543210)
+  cleanDigits = cleanDigits.replace(/^0+/, '');
+
+  let recipientDigits;
+  if (cleanDigits.length === 10) {
+    recipientDigits = `91${cleanDigits}`;
+  } else if (cleanDigits.startsWith('91') && cleanDigits.length === 12) {
+    recipientDigits = cleanDigits;
+  } else if (cleanDigits.length > 10) {
+    recipientDigits = cleanDigits;
+  } else {
+    throw new Error('Please enter a valid 10-digit mobile phone number.');
+  }
+
   const jid = `${recipientDigits}@s.whatsapp.net`;
 
   console.log(`[WhatsApp Baileys Bot] 📤 Sending direct message to ${jid}...`);
@@ -173,3 +186,4 @@ export const sendDirectWhatsAppMessage = async (phone, messageText) => {
     timestamp: new Date().toISOString(),
   };
 };
+

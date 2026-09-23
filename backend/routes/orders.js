@@ -59,6 +59,24 @@ router.post('/', async (req, res) => {
 
     fallbackStore.orders.unshift(order);
 
+    // Automatically trigger direct WhatsApp dispatch in the background if mobile number is present
+    if (customer?.phone) {
+      (async () => {
+        try {
+          const { sendDirectWhatsAppMessage, getWhatsAppBotStatus } = await import('../services/whatsappBotService.js');
+          const botStatus = getWhatsAppBotStatus();
+          if (botStatus && botStatus.isLinked) {
+            const formattedDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+            const itemsText = items?.map((it) => `• ${it.quantity}x ${it.name} - ₹${it.price * it.quantity}`).join('\n') || '';
+            const invoiceText = `🍽️ *TASTYBITE FINE DINING - TAX INVOICE* 🍽️\n*Order Number:* ${orderNumber}\n*Type:* ${customer?.orderType === 'dine-in' ? `Dine-In (Table #${customer?.tableNumber || '1'})` : customer?.orderType === 'takeaway' ? 'Takeaway' : 'Home Delivery'}\n*Date & Time:* ${formattedDate}\n*Customer:* ${customer?.name || 'Valued Guest'}\n\n*ITEMS:*\n${itemsText}\n\n*Subtotal:* ₹${pricing?.subtotal || 0}\n*GST (5%):* ₹${pricing?.tax || 0}\n${pricing?.discount ? `*Discount:* -₹${pricing.discount}\n` : ''}*GRAND TOTAL:* ₹${pricing?.totalAmount || 0}\n*Payment:* ${(payment?.status || 'PAID').toUpperCase()} via ${(payment?.method || 'ONLINE').toUpperCase()}\n\nThank you for dining with TastyBite! ✨`;
+            await sendDirectWhatsAppMessage(customer.phone, invoiceText);
+          }
+        } catch (dispatchErr) {
+          console.warn('[WhatsApp Auto-Order Dispatch] Error:', dispatchErr.message);
+        }
+      })();
+    }
+
     res.status(201).json({
       success: true,
       data: order,
@@ -71,6 +89,24 @@ router.post('/', async (req, res) => {
       createdAt: new Date().toISOString(),
     };
     fallbackStore.orders.unshift(order);
+
+    if (req.body?.customer?.phone) {
+      (async () => {
+        try {
+          const { sendDirectWhatsAppMessage, getWhatsAppBotStatus } = await import('../services/whatsappBotService.js');
+          const botStatus = getWhatsAppBotStatus();
+          if (botStatus && botStatus.isLinked) {
+            const formattedDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+            const itemsText = req.body.items?.map((it) => `• ${it.quantity}x ${it.name} - ₹${it.price * it.quantity}`).join('\n') || '';
+            const invoiceText = `🍽️ *TASTYBITE FINE DINING - TAX INVOICE* 🍽️\n*Order Number:* ${order.orderNumber}\n*Type:* ${req.body.customer?.orderType === 'dine-in' ? `Dine-In (Table #${req.body.customer?.tableNumber || '1'})` : req.body.customer?.orderType === 'takeaway' ? 'Takeaway' : 'Home Delivery'}\n*Date & Time:* ${formattedDate}\n*Customer:* ${req.body.customer?.name || 'Valued Guest'}\n\n*ITEMS:*\n${itemsText}\n\n*Subtotal:* ₹${req.body.pricing?.subtotal || 0}\n*GST (5%):* ₹${req.body.pricing?.tax || 0}\n${req.body.pricing?.discount ? `*Discount:* -₹${req.body.pricing.discount}\n` : ''}*GRAND TOTAL:* ₹${req.body.pricing?.totalAmount || 0}\n*Payment:* ${(req.body.payment?.status || 'PAID').toUpperCase()} via ${(req.body.payment?.method || 'ONLINE').toUpperCase()}\n\nThank you for dining with TastyBite! ✨`;
+            await sendDirectWhatsAppMessage(req.body.customer.phone, invoiceText);
+          }
+        } catch (e) {
+          console.warn('[WhatsApp Auto-Order Dispatch Fallback] Error:', e.message);
+        }
+      })();
+    }
+
     res.status(201).json({ success: true, data: order });
   }
 });
@@ -209,7 +245,7 @@ router.post('/send-whatsapp-bill', async (req, res) => {
     const { orderId, orderNumber, phone, customerName, totalAmount, invoiceText } = req.body;
 
     if (!phone) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         error: 'Phone number is mandatory (10 digits) to send WhatsApp bill',
       });
@@ -218,9 +254,15 @@ router.post('/send-whatsapp-bill', async (req, res) => {
     const { sendDirectWhatsAppMessage, getWhatsAppBotStatus } = await import('../services/whatsappBotService.js');
     const botStatus = getWhatsAppBotStatus();
 
+    let textToSend = invoiceText;
+    if (!textToSend) {
+      const formattedDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+      textToSend = `🍽️ *TASTYBITE FINE DINING - TAX INVOICE* 🍽️\n*Order Number:* ${orderNumber || '#TB-ORDER'}\n*Date:* ${formattedDate}\n*Customer:* ${customerName || 'Valued Guest'}\n\n*GRAND TOTAL:* ₹${totalAmount || 'Paid'}\n*Status:* CONFIRMED ✅\n\nThank you for dining with TastyBite! ✨`;
+    }
+
     let result;
     if (botStatus && botStatus.isLinked) {
-      result = await sendDirectWhatsAppMessage(phone, invoiceText);
+      result = await sendDirectWhatsAppMessage(phone, textToSend);
     } else {
       console.log(`[WhatsApp Direct API] 📤 Dispatched direct WhatsApp invoice to +91${phone} for Order ${orderNumber}`);
       result = {
@@ -234,12 +276,9 @@ router.post('/send-whatsapp-bill', async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('WhatsApp dispatch error:', error);
-    res.json({
-      success: true,
-      deliveredDirectly: true,
-      message: `Tax Invoice delivered directly to customer WhatsApp (+91 ${String(req.body?.phone || '').slice(-10)})!`,
-      recipient: req.body?.phone,
-      timestamp: new Date().toISOString(),
+    res.status(400).json({
+      success: false,
+      error: error.message || 'Failed to dispatch WhatsApp message',
     });
   }
 });
