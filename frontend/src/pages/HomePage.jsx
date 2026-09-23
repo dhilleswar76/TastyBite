@@ -186,7 +186,7 @@ function HomePage() {
 
         <div className="view-full-menu-cta">
           <Link to="/menu" className="btn btn-primary large-cta">
-            View Complete Menu Catalog (20+ Dishes) &rarr;
+            View Complete Menu Catalog
           </Link>
         </div>
       </section>

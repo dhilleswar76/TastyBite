@@ -211,8 +211,14 @@ Thank you for dining with TastyBite! ✨`;
         aria-label="Checkout"
       >
         {/* Close Button */}
-        <button className="checkout-modal-close" onClick={handleClose} aria-label="Close modal">
-          &times;
+        <button
+          type="button"
+          className="checkout-modal-close"
+          onClick={handleClose}
+          aria-label="Close modal"
+          title="Close Checkout"
+        >
+          ✕
         </button>
 
         {placedOrder ? (
