@@ -8010,6 +8010,11 @@ footer.footer {
    3. MOBILE PHONES & TABLETS PORTRAIT (max-width: 768px)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
+  /* Global Base Scaling for Compact Mobile Experience */
+  html {
+    font-size: 14.5px !important;
+  }
+
   /* Global Layout */
   html, body, #root, .app-shell, .main-content-flow {
     overflow-x: hidden !important;
@@ -8025,32 +8030,32 @@ footer.footer {
   /* Hero Section */
   .hero {
     min-height: auto;
-    padding: 3.5rem 1.2rem 2.5rem;
+    padding: 2.8rem 1rem 2rem;
   }
 
   .hero h1 {
-    font-size: 2.2rem;
-    line-height: 1.2;
-    margin-bottom: 1rem;
+    font-size: 1.65rem;
+    line-height: 1.25;
+    margin-bottom: 0.75rem;
   }
 
   .hero p {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     line-height: 1.5;
-    margin-bottom: 1.8rem;
+    margin-bottom: 1.4rem;
   }
 
   .hero-btn-group {
     flex-direction: column;
     width: 100%;
-    gap: 0.75rem;
+    gap: 0.65rem;
   }
 
   .btn-hero-primary,
   .btn-hero-secondary {
     width: 100%;
-    padding: 0.9rem;
-    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
     text-align: center;
     justify-content: center;
     display: inline-flex;
@@ -8061,45 +8066,51 @@ footer.footer {
   .hero-highlights-strip {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-    margin-top: 1.5rem;
+    gap: 0.45rem;
+    margin-top: 1.25rem;
   }
 
   .highlight-item {
-    font-size: 0.75rem;
-    padding: 0.45rem 0.6rem;
+    font-size: 0.7rem;
+    padding: 0.4rem 0.5rem;
     text-align: center;
     justify-content: center;
   }
 
   /* Page Hero Banner for Sub-Pages */
   .page-hero-banner {
-    padding: 2.5rem 1rem 2rem;
+    padding: 2rem 0.85rem 1.5rem;
   }
 
   .page-hero-banner h1 {
-    font-size: 1.85rem;
+    font-size: 1.4rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .page-hero-banner p {
+    font-size: 0.82rem;
   }
 
   .breadcrumbs {
-    font-size: 0.8rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.72rem;
+    margin-bottom: 0.4rem;
   }
 
   /* Section Title Wrap */
   .section-header-wrap {
-    margin-bottom: 1.8rem;
+    margin-bottom: 1.4rem;
     padding: 0 0.5rem;
   }
 
   .section-title {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
     line-height: 1.25;
+    margin-bottom: 0.35rem;
   }
 
   .section-subtitle {
-    font-size: 0.88rem;
-    margin-bottom: 1.2rem;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
   }
 
   /* Daily Deal & Chef Spotlight */
@@ -8110,12 +8121,12 @@ footer.footer {
 
   .daily-deal-card,
   .chef-deal-spotlight-banner {
-    padding: 1.2rem 1rem;
+    padding: 1.1rem 0.85rem;
     border-radius: var(--radius-md);
   }
 
   .deal-img-wrap {
-    height: 200px;
+    height: 180px;
     width: 100%;
   }
 
@@ -8127,19 +8138,25 @@ footer.footer {
 
   .deal-info h2,
   .deal-dish-title {
-    font-size: 1.3rem;
+    font-size: 1.15rem;
+  }
+
+  .deal-info p,
+  .deal-desc {
+    font-size: 0.8rem;
+    line-height: 1.45;
   }
 
   .deal-pricing-timer-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 0.6rem;
   }
 
   .deal-action-buttons {
     flex-direction: column;
     width: 100%;
-    gap: 0.6rem;
+    gap: 0.5rem;
   }
 
   .deal-order-btn,
@@ -8148,6 +8165,8 @@ footer.footer {
     width: 100%;
     text-align: center;
     justify-content: center;
+    font-size: 0.85rem;
+    padding: 0.75rem 1rem;
     box-sizing: border-box;
   }
 
@@ -9248,8 +9267,18 @@ footer.footer {
 }
 
 @media (max-width: 480px) {
+  /* Ultra-sleek compact scaling on phones */
+  html {
+    font-size: 13.5px !important;
+  }
+
+  /* Keep input font at 16px to prevent iOS Safari auto-zoom */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
   .header {
-    padding: 0.6rem 0.75rem !important;
+    padding: 0.55rem 0.75rem !important;
   }
 
   .logo span {
@@ -9257,19 +9286,170 @@ footer.footer {
   }
 
   .logo img {
-    width: 32px !important;
-    height: 32px !important;
+    width: 30px !important;
+    height: 30px !important;
   }
 
   .header-actions-group {
-    gap: 0.4rem !important;
+    gap: 0.35rem !important;
   }
 
   .header-cart-icon-btn,
   .profile-icon-btn,
   .nav-toggle {
-    width: 36px !important;
-    height: 36px !important;
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  /* Compact Typography Across Sections */
+  .hero {
+    padding: 2.2rem 0.85rem 1.75rem !important;
+  }
+
+  .hero h1 {
+    font-size: 1.35rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .hero p {
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .page-hero-banner {
+    padding: 1.6rem 0.75rem 1.25rem !important;
+  }
+
+  .page-hero-banner h1 {
+    font-size: 1.2rem !important;
+  }
+
+  .page-hero-banner p {
+    font-size: 0.75rem !important;
+  }
+
+  .section-title {
+    font-size: 1.15rem !important;
+  }
+
+  .section-subtitle {
+    font-size: 0.75rem !important;
+  }
+
+  .deal-info h2,
+  .deal-dish-title {
+    font-size: 1.05rem !important;
+  }
+
+  .deal-info p,
+  .deal-desc {
+    font-size: 0.75rem !important;
+  }
+
+  .menu-item-header h3,
+  .dish-title-row h3,
+  .dish-name {
+    font-size: 0.88rem !important;
+  }
+
+  .menu-item-desc,
+  .dish-desc,
+  .dish-card p {
+    font-size: 0.74rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .menu-item-price,
+  .dish-price {
+    font-size: 0.88rem !important;
+  }
+
+  /* Compact Buttons & Controls */
+  .btn-hero-primary,
+  .btn-hero-secondary,
+  .deal-order-btn,
+  .claim-deal-btn,
+  .gate-btn,
+  .profile-signout-btn,
+  .submit-inquiry-btn,
+  .btn-contact-submit,
+  .reservation-submit-btn {
+    font-size: 0.82rem !important;
+    padding: 0.65rem 0.85rem !important;
+  }
+
+  .customize-btn,
+  .add-to-cart-btn-primary {
+    font-size: 0.75rem !important;
+    padding: 0.55rem 0.4rem !important;
+  }
+
+  .filter-btn,
+  .dietary-btn {
+    font-size: 0.72rem !important;
+    padding: 0.35rem 0.65rem !important;
+  }
+
+  .tag-pill,
+  .dish-badge,
+  .chef-star-tag,
+  .badge-veg,
+  .badge-nonveg,
+  .highlight-item,
+  .time-slot-pill {
+    font-size: 0.65rem !important;
+  }
+
+  /* Profile Auth Gate & Cards */
+  .profile-auth-gate-card {
+    padding: 1.5rem 0.9rem !important;
+  }
+
+  .profile-auth-gate-card h2 {
+    font-size: 1.25rem !important;
+  }
+
+  .gate-subtext {
+    font-size: 0.78rem !important;
+    margin-bottom: 1.4rem !important;
+  }
+
+  .benefit-item {
+    padding: 0.85rem !important;
+    gap: 0.65rem !important;
+  }
+
+  .benefit-icon {
+    font-size: 1.4rem !important;
+  }
+
+  .benefit-item strong {
+    font-size: 0.82rem !important;
+  }
+
+  .benefit-item p {
+    font-size: 0.72rem !important;
+  }
+
+  /* Modals & Drawers */
+  .cart-item-title {
+    font-size: 0.82rem !important;
+  }
+
+  .cart-item-price {
+    font-size: 0.8rem !important;
+  }
+
+  .cart-checkout-action-btn {
+    font-size: 0.85rem !important;
+    padding: 0.8rem !important;
+  }
+
+  .checkout-modal-card h2,
+  .custom-modal-card h2,
+  .tracker-modal-card h2,
+  .nutrition-modal-card h2 {
+    font-size: 1.1rem !important;
   }
 }
 
