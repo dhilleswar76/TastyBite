@@ -77,126 +77,17 @@ function Header() {
 
   return (
     <header className="header">
-      {/* Brand Logo */}
+      {/* Brand Logo (Left) */}
       <Link to="/" className="logo">
         <img src="/pictures-restaurant/restaurant-logo.webp" alt="TastyBite Logo" />
         <span>TastyBite</span>
       </Link>
 
-      {/* Main Multi-Page Navigation Bar */}
-      <nav className={`nav ${showNav ? 'show' : ''}`}>
-        {!isAuthPage && !isAdminPage && (
-          <>
-            <div className="mobile-nav-header">
-              <span className="mobile-nav-title">Navigation Menu</span>
-              <button
-                type="button"
-                className="mobile-nav-close-btn"
-                onClick={() => setShowNav(false)}
-                aria-label="Close menu"
-              >
-                ✕
-              </button>
-            </div>
-
-            <button
-              type="button"
-              className="mobile-drawer-tracker-btn"
-              onClick={() => {
-                setShowNav(false);
-                openOrderTracker();
-              }}
-            >
-              <span>📍 Track Live Order</span>
-              <span className="drawer-badge">Live Status</span>
-            </button>
-
-            <NavLink
-              to="/"
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              onClick={() => setShowNav(false)}
-            >
-              <span>🏠 Home</span>
-            </NavLink>
-            <NavLink
-              to="/menu"
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              onClick={() => setShowNav(false)}
-            >
-              <span>🍲 Menu &amp; Order</span>
-            </NavLink>
-            <NavLink
-              to="/about"
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              onClick={() => setShowNav(false)}
-            >
-              <span>📖 Our Story &amp; Heritage</span>
-            </NavLink>
-            <NavLink
-              to="/reservations"
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              onClick={() => setShowNav(false)}
-            >
-              <span>📅 Table Reservations</span>
-            </NavLink>
-            <NavLink
-              to="/events"
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              onClick={() => setShowNav(false)}
-            >
-              <span>🎉 Events &amp; Catering</span>
-            </NavLink>
-            <NavLink
-              to="/reviews"
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              onClick={() => setShowNav(false)}
-            >
-              <span>⭐ Guest Reviews</span>
-            </NavLink>
-            <NavLink
-              to="/contact"
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              onClick={() => setShowNav(false)}
-            >
-              <span>📞 Contact &amp; Location</span>
-            </NavLink>
-
-            <div className="mobile-drawer-footer">
-              {isAuthenticated ? (
-                <NavLink
-                  to="/profile"
-                  className="mobile-drawer-profile-btn"
-                  onClick={() => setShowNav(false)}
-                >
-                  <span>👤 My Profile &amp; Rewards ({loyaltyPoints} pts)</span>
-                </NavLink>
-              ) : (
-                <div className="mobile-drawer-auth-btns">
-                  <Link
-                    to="/signin"
-                    className="drawer-signin-btn"
-                    onClick={() => setShowNav(false)}
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="drawer-signup-btn"
-                    onClick={() => setShowNav(false)}
-                  >
-                    Sign Up
-                  </Link>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </nav>
-
-      {/* Header Actions (Track, Cart Icon, Profile Icon) */}
+      {/* Header Actions (Right: Track, Cart, Profile, 3-Lines Toggle Menu) */}
       <div className="header-actions-group">
         {/* Track Order Quick Action */}
         <button
+          type="button"
           className="nav-tracker-btn"
           onClick={() => {
             setShowNav(false);
@@ -209,6 +100,7 @@ function Header() {
 
         {/* Cart Icon Button (Symbol Only + Badge) */}
         <button
+          type="button"
           className="header-cart-icon-btn"
           onClick={() => setIsCartOpen(true)}
           aria-label="Open Shopping Cart"
@@ -220,7 +112,7 @@ function Header() {
           )}
         </button>
 
-        {/* Profile Avatar / Icon (Rightmost) */}
+        {/* Profile Avatar / Icon */}
         <div className="profile-dropdown-container" ref={profileRef}>
           <button
             type="button"
@@ -243,7 +135,7 @@ function Header() {
             )}
           </button>
 
-          {/* Profile Dropdown Popover (Compact Window) */}
+          {/* Profile Dropdown Popover */}
           {showProfileDropdown && (
             <div className="profile-popover-card">
               {isAuthenticated ? (
@@ -421,7 +313,132 @@ function Header() {
           )}
         </div>
 
-      {/* Nav Backdrop Overlay for Mobile */}
+        {/* 3-Lines Toggle Menu Button (Right-most End of Nav Bar) */}
+        <button
+          id="navToggle"
+          type="button"
+          className={`nav-toggle ${showNav ? 'active' : ''}`}
+          onClick={toggleNav}
+          aria-label="Toggle navigation menu"
+          aria-expanded={showNav}
+          title="Open Menu"
+        >
+          <span className="nav-toggle-icon">{showNav ? '✕' : '☰'}</span>
+        </button>
+      </div>
+
+      {/* Slide-out Navigation Drawer (Holds ALL menu items & quick actions) */}
+      <nav className={`nav ${showNav ? 'show' : ''}`}>
+        {!isAuthPage && !isAdminPage && (
+          <>
+            <div className="mobile-nav-header">
+              <span className="mobile-nav-title">✨ Explore TastyBite</span>
+              <button
+                type="button"
+                className="mobile-nav-close-btn"
+                onClick={() => setShowNav(false)}
+                aria-label="Close menu"
+                title="Close Navigation"
+              >
+                ✕
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className="mobile-drawer-tracker-btn"
+              onClick={() => {
+                setShowNav(false);
+                openOrderTracker();
+              }}
+            >
+              <span>📍 Track Live Order</span>
+              <span className="drawer-badge">Live Status</span>
+            </button>
+
+            <NavLink
+              to="/"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              <span>🏠 Home</span>
+            </NavLink>
+            <NavLink
+              to="/menu"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              <span>🍲 Menu &amp; Order</span>
+            </NavLink>
+            <NavLink
+              to="/about"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              <span>📖 Our Story &amp; Heritage</span>
+            </NavLink>
+            <NavLink
+              to="/reservations"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              <span>📅 Table Reservations</span>
+            </NavLink>
+            <NavLink
+              to="/events"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              <span>🎉 Events &amp; Catering</span>
+            </NavLink>
+            <NavLink
+              to="/reviews"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              <span>⭐ Guest Reviews</span>
+            </NavLink>
+            <NavLink
+              to="/contact"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setShowNav(false)}
+            >
+              <span>📞 Contact &amp; Location</span>
+            </NavLink>
+
+            <div className="mobile-drawer-footer">
+              {isAuthenticated ? (
+                <NavLink
+                  to="/profile"
+                  className="mobile-drawer-profile-btn"
+                  onClick={() => setShowNav(false)}
+                >
+                  <span>👤 My Profile &amp; Rewards ({loyaltyPoints} pts)</span>
+                </NavLink>
+              ) : (
+                <div className="mobile-drawer-auth-btns">
+                  <Link
+                    to="/signin"
+                    className="drawer-signin-btn"
+                    onClick={() => setShowNav(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="drawer-signup-btn"
+                    onClick={() => setShowNav(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </nav>
+
+      {/* Nav Backdrop Overlay */}
       {showNav && (
         <div
           className="nav-backdrop"
@@ -429,18 +446,6 @@ function Header() {
           aria-hidden="true"
         ></div>
       )}
-
-      {/* Mobile Navigation Drawer Toggle */}
-      <button
-        id="navToggle"
-        className={`nav-toggle ${showNav ? 'active' : ''}`}
-        onClick={toggleNav}
-        aria-label="Toggle navigation"
-        aria-expanded={showNav}
-      >
-        {showNav ? '✕' : '☰'}
-      </button>
-      </div>
 
       {/* Profile Edit Modal */}
       {showProfileEditModal && (
